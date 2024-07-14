@@ -31,6 +31,7 @@ def get_raylib(library_path: Path) -> Union[Tuple[str, str], None]:
         case "Darwin":
             download_url += macos
         case _:
+            logger.error(f"Sorry, I'm too lazy to handle Windows and other platforms")
             logger.error(f"Unsupported platform {platform}")
             return None
 
