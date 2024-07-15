@@ -38,3 +38,7 @@ void plug_update(void) {
   DrawRectangle(width * (sinf(dt) + 1.0) * 0.5, 0, 100, 100, RED);
   EndDrawing();
 }
+
+void plug_destroy(void) {
+  free(plug);
+}

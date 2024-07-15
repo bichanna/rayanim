@@ -42,6 +42,12 @@ bool reload_libplug() {
     return false;
   }
 
+  plug_destroy = dlsym(libplug, "plug_destroy");
+  if (plug_destroy == NULL) {
+    fprintf(stderr, "ERROR: %s\n", dlerror());
+    return false;
+  }
+
   return true;
 }
 
@@ -59,10 +65,14 @@ int main(void) {
       void *state = plug_pre_reload();
       reload_libplug();
       plug_post_reload(state);
+    } else if (IsKeyPressed(KEY_Q)) {
+      break;
     }
 
     plug_update();
   }
+
+  plug_destroy();
 
   CloseWindow();
 
