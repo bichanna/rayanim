@@ -10,7 +10,6 @@ project('rayanim', 'c',
 
 python = import('python').find_installation('python3')
 result = run_command(python, files('scripts/get_raylib.py'), check: true)
-
 if result.returncode() == 0
   outputs = result.stdout().strip().split('\n')
   foreach output : outputs
@@ -22,6 +21,11 @@ if result.returncode() == 0
   endforeach
 else
   error('Failed to get raylib')
+endif
+
+result = run_command(python, files('scripts/generate_clangd_config.py'), raylib_include_dir, check: true)
+if result.returncode() != 0
+  error('Failed to set RAYLIB_INCLUDE_DIR')
 endif
 
 cc = meson.get_compiler('c')
