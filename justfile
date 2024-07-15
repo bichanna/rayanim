@@ -8,6 +8,9 @@ configure:
 build: configure
   meson compile -C {{BUILD_DIR}}
 
+run: build
+  ./builddir/rayanim
+
 test: build
   meson test -C {{BUILD_DIR}}
 

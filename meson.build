@@ -2,7 +2,7 @@ project('rayanim', 'c',
   version: '0.1.0',
   license: 'MIT',
   default_options: [
-    'warning_level=3',
+    'warning_level=2',
     'werror=true',
     'c_std=c17'
   ]
@@ -25,7 +25,7 @@ endif
 
 result = run_command(python, files('scripts/generate_clangd_config.py'), raylib_include_dir, check: true)
 if result.returncode() != 0
-  error('Failed to set RAYLIB_INCLUDE_DIR')
+  error('Failed to generate .clangd and compile_flags.txt')
 endif
 
 cc = meson.get_compiler('c')
@@ -35,11 +35,20 @@ raylib_dep = declare_dependency(
   include_directories: include_directories(raylib_include_dir)
 )
 
+libmath_dep = cc.find_library('m', required: true)
+
+libplug = shared_library('plug',
+  'src/plug.c',
+  'src/plug.h',
+  dependencies: [raylib_dep, libmath_dep]
+)
+
 src = [
   'src/main.c'
 ]
 
 executable('rayanim',
   src,
+  link_with: libplug,
   dependencies: [raylib_dep]
 )
