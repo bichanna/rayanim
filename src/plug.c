@@ -25,20 +25,25 @@ void plug_init(void) {
 
 void *plug_pre_reload(void) { return plug; }
 
-void plug_post_reload(void *state) {
-  plug = state;
-}
+void plug_post_reload(void *state) { plug = state; }
 
 void plug_update(void) {
-  float width = GetScreenWidth();
-  float dt = GetFrameTime();
+  float w = GetScreenWidth();
+  float h = GetScreenHeight();
+  float t = GetTime();
+
+  float rw = 100.0;
+  float rh = 100.0;
 
   BeginDrawing();
+
   ClearBackground(GetColor(0x181818FF));
-  DrawRectangle(width * (sinf(dt) + 1.0) * 0.5, 0, 100, 100, RED);
+  DrawCircle(w * (sinf(t * 2) + 1.0) * 0.5, h * (cosf(t * 10) + 1.0) * 0.5, 30,
+             GREEN);
+  DrawRectangle((w - rw) * (sinf(t * 3) + 1.0) * 0.5,
+                (h - rh) * (cosf(t * 0.5) + 1.0) * 0.5, rw, rh, RED);
+
   EndDrawing();
 }
 
-void plug_destroy(void) {
-  free(plug);
-}
+void plug_destroy(void) { free(plug); }

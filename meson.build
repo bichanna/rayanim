@@ -43,6 +43,9 @@ libplug = shared_library('plug',
   dependencies: [raylib_dep, libmath_dep]
 )
 
+libcargs = static_library('cargs', 'src/cargs/cargs.c', 'src/cargs/cargs.h')
+cargs_dep = declare_dependency(link_with: libcargs)
+
 src = [
   'src/main.c'
 ]
@@ -50,5 +53,5 @@ src = [
 executable('rayanim',
   src,
   link_with: libplug,
-  dependencies: [raylib_dep]
+  dependencies: [raylib_dep, cargs_dep]
 )

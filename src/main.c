@@ -7,12 +7,12 @@
 char *libplug_path = "builddir/libplug.so";
 void *libplug = NULL;
 
-bool reload_libplug() {
+bool reload_plugin() {
   if (libplug != NULL) {
     dlclose(libplug);
   }
 
-  libplug = dlopen("builddir/libplug.so", RTLD_NOW);
+  libplug = dlopen(libplug_path, RTLD_NOW);
   if (libplug == NULL) {
     fprintf(stderr, "ERROR: %s\n", dlerror());
     return false;
@@ -52,10 +52,12 @@ bool reload_libplug() {
 }
 
 int main(void) {
-  if (!reload_libplug())
+  if (!reload_plugin())
     return 1;
 
-  InitWindow(800, 600, "Hello World");
+  float factor = 80.0;
+
+  InitWindow(16 * factor, 9 * factor, "Rayanim");
   SetTargetFPS(60);
 
   plug_init();
@@ -63,7 +65,7 @@ int main(void) {
   while (!WindowShouldClose()) {
     if (IsKeyPressed(KEY_R)) {
       void *state = plug_pre_reload();
-      reload_libplug();
+      reload_plugin();
       plug_post_reload(state);
     } else if (IsKeyPressed(KEY_Q)) {
       break;
