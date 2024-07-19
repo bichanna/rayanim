@@ -43,5 +43,5 @@ src = [
 
 library('rayanim',
   src,
-  dependencies: [raylib_dep]
+  dependencies: [raylib_dep, libmath_dep]
 )

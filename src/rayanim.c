@@ -15,7 +15,7 @@ void RA_ObjectList_init(RA_ObjectList *obj_list) {
   obj_list->count = 0;
   obj_list->capacity = DA_INIT_SIZE;
   obj_list->objects = malloc(DA_INIT_SIZE * sizeof(RA_Object));
-assert(obj_list->objects == NULL);
+  assert(obj_list->objects == NULL);
 }
 
 void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj) {
@@ -205,4 +205,29 @@ void RA_Scene_destroy(RA_Scene *scene) {
   RA_ObjectList_destroy(&scene->object_list);
   RA_AnimationList_destroy(&scene->animation_list);
   scene = NULL;
+}
+
+void playScene(RA_Scene *scene) {
+  InitWindow(scene->width, scene->height, scene->title);
+  SetTargetFPS(60);
+
+  float last_time = GetTime();
+
+  while (!WindowShouldClose()) {
+    if (IsKeyPressed(KEY_Q)) break;
+
+    float current_time = GetTime();
+    float dt = current_time - last_time;
+    last_time = current_time;
+
+    RA_Scene_update(scene, dt);
+    RA_Scene_render(scene);
+  }
+
+  CloseWindow();
+}
+
+void recordScene(RA_Scene *scene) {
+  // TODO: will be implemented later
+  scene = scene;
 }

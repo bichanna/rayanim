@@ -1,8 +1,9 @@
-#include "plug.h"
 #include <dlfcn.h>
 #include <raylib.h>
 #include <stddef.h>
 #include <stdio.h>
+
+#include "plug.h"
 
 char *libplug_path = "builddir/libplug.so";
 void *libplug = NULL;
@@ -52,8 +53,7 @@ bool reload_plugin() {
 }
 
 int main(void) {
-  if (!reload_plugin())
-    return 1;
+  if (!reload_plugin()) return 1;
 
   float factor = 80.0;
 
