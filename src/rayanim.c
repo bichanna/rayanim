@@ -130,26 +130,26 @@ void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *)) {
 
 void RA_Animation_init(RA_Animation *anim,
                        RA_Object *obj,
-                       uint32_t duration,
-                       bool (*update)(void *, uint32_t),
+                       float duration,
+                       bool (*update)(void *, float),
                        void (*interpolate)(void *, float)) {
   anim->_id = ++animation_id;
   anim->object = obj;
   anim->duration = duration;
-  anim->elapsed_time = 0;
+  anim->elapsed_time = 0.0f;
   anim->update = update;
   anim->interpolate = interpolate;
 }
 
 void RA_Animation_defaultInit(RA_Animation *anim,
                               RA_Object *obj,
-                              uint32_t duration,
+                              float duration,
                               void (*interpolate)(void *, float)) {
   RA_Animation_init(anim, obj, duration, RA_Animation_defaultUpdate, interpolate);
 }
 
-bool RA_Animation_defaultUpdate(void *any, uint32_t dt) {
-  RA_Animation *anim = (RA_Animation *)any;
+bool RA_Animation_defaultUpdate(void *self, float dt) {
+  RA_Animation *anim = (RA_Animation *)self;
 
   anim->elapsed_time += dt;
   anim->interpolate(anim, fminf(anim->elapsed_time / anim->duration, 1.0f));
@@ -188,7 +188,7 @@ void RA_Scene_render(RA_Scene *scene) {
   EndDrawing();
 }
 
-void RA_Scene_update(RA_Scene *scene, uint32_t dt) {
+void RA_Scene_update(RA_Scene *scene, float dt) {
   if ((scene->current_animation != NULL) && (scene->animation_list.count > 0)) {
     scene->current_animation = RA_AnimationList_pop(&scene->animation_list);
     RA_Object *current_obj = scene->current_animation->object;
@@ -231,3 +231,67 @@ void recordScene(RA_Scene *scene) {
   // TODO: will be implemented later
   scene = scene;
 }
+
+// ---------------------------- Built-In RA_Objects ----------------------------
+
+// --------------- RA_Circle ---------------
+
+void RA_Circle_init(RA_Circle *circle,
+                    Vector2 center,
+                    float radius,
+                    float outline_thickness,
+                    int segments,
+                    Color circle_color,
+                    Color outline_color,
+                    void (*render)(void *)) {
+  RA_Object_init(&circle->base, center, render);
+  circle->radius = radius;
+  circle->angle = 0.0f;
+  circle->outline_thickness = outline_thickness;
+  circle->segments = segments;
+  circle->circle_color = circle_color;
+  circle->outline_color = outline_color;
+}
+
+void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius) {
+  RA_Circle_init(circle, center, radius, 3.0f, 100, BLUE, DARKBLUE, RA_Circle_render);
+}
+
+void RA_Circle_render(void *self) {
+  RA_Circle *circle = (RA_Circle *)self;
+
+  DrawCircleSector(circle->base.position,
+                   circle->radius,
+                   0.0f,
+                   circle->angle,
+                   circle->segments,
+                   circle->circle_color);
+
+  DrawCircleSectorLines(circle->base.position,
+                        circle->radius,
+                        0.0f,
+                        circle->angle,
+                        circle->segments,
+                        circle->outline_color);
+}
+
+void RA_CircleAnimation_init(RA_Animation *anim,
+                             RA_Circle *circle,
+                             float duration,
+                             bool (*update)(void *, float),
+                             void (*interpolate)(void *, float)) {
+  RA_Animation_init(anim, (RA_Object *)circle, duration, update, interpolate);
+}
+
+void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
+  RA_CircleAnimation_init(
+      anim, circle, 1.5f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
+}
+
+void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
+  RA_Animation *anim = (RA_Animation *)self;
+  RA_Circle *circle = (RA_Circle *)anim->object;
+  circle->angle = time * 2 * PI;
+}
+
+// --------------- RA_Circle ---------------

@@ -24,9 +24,9 @@ typedef struct RA_Animation {
   uint32_t _id;
   RA_Object *object;
   float duration;
-  uint32_t elapsed_time;
+  float elapsed_time;
 
-  bool (*update)(void *, uint32_t);
+  bool (*update)(void *, float);
   void (*interpolate)(void *, float);
 } RA_Animation;
 
@@ -66,22 +66,56 @@ void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *));
 
 void RA_Animation_init(RA_Animation *anim,
                        RA_Object *obj,
-                       uint32_t duration,
-                       bool (*update)(void *, uint32_t),
+                       float duration,
+                       bool (*update)(void *, float),
                        void (*interpolate)(void *, float));
 void RA_Animation_defaultInit(RA_Animation *anim,
                               RA_Object *obj,
-                              uint32_t duration,
+                              float duration,
                               void (*interpolate)(void *, float));
-bool RA_Animation_defaultUpdate(void *any, uint32_t dt);
+bool RA_Animation_defaultUpdate(void *self, float dt);
 
 void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color);
 void RA_Scene_play(RA_Scene *scene, RA_Animation *anim);
 void RA_Scene_render(RA_Scene *scene);
-void RA_Scene_update(RA_Scene *scene, uint32_t dt);
+void RA_Scene_update(RA_Scene *scene, float dt);
 void RA_Scene_destroy(RA_Scene *scene);
 
 void playScene(RA_Scene *scene);
 void recordScene(RA_Scene *scene);
+
+// ------------------------------ Built-In RA_Objects & RA_Animations ------------------------------
+
+// --------------- RA_Circle ---------------
+
+typedef struct RA_Circle {
+  RA_Object base;
+  float radius;
+  float angle;
+  float outline_thickness;
+  int segments;
+  Color circle_color;
+  Color outline_color;
+} RA_Circle;
+
+void RA_Circle_init(RA_Circle *circle,
+                    Vector2 center,
+                    float radius,
+                    float outline_thickness,
+                    int segments,
+                    Color circle_color,
+                    Color outline_color,
+                    void (*render)(void *));
+void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius);
+void RA_Circle_render(void *self);
+void RA_CircleAnimation_init(RA_Animation *anim,
+                             RA_Circle *circle,
+                             float duration,
+                             bool (*update)(void *, float),
+                             void (*interpolate)(void *, float));
+void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle);
+void RA_CircleAnimation_defaultInterpolate(void *self, float time);
+
+// --------------- RA_Circle ---------------
 
 #endif  // RAYANIM_H
