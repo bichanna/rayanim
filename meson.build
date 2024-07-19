@@ -2,7 +2,7 @@ project('rayanim', 'c',
   version: '0.1.0',
   license: 'MIT',
   default_options: [
-    'warning_level=2',
+    'warning_level=3',
     'werror=true',
     'c_std=c17'
   ]
@@ -37,21 +37,11 @@ raylib_dep = declare_dependency(
 
 libmath_dep = cc.find_library('m', required: true)
 
-libplug = shared_library('plug',
-  'src/plug.c',
-  'src/plug.h',
-  dependencies: [raylib_dep, libmath_dep]
-)
-
-libcargs = static_library('cargs', 'src/cargs/cargs.c', 'src/cargs/cargs.h')
-cargs_dep = declare_dependency(link_with: libcargs)
-
 src = [
-  'src/main.c'
+  'src/rayanim.c'
 ]
 
-executable('rayanim',
+library('rayanim',
   src,
-  link_with: libplug,
-  dependencies: [raylib_dep, cargs_dep]
+  dependencies: [raylib_dep]
 )
