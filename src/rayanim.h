@@ -107,7 +107,7 @@ void RA_Circle_init(RA_Circle *circle,
                     Color outline_color,
                     void (*render)(void *));
 void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius);
-void RA_Circle_render(void *self);
+void RA_Circle_defaultRender(void *self);
 void RA_CircleAnimation_init(RA_Animation *anim,
                              RA_Circle *circle,
                              float duration,

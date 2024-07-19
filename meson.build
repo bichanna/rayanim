@@ -41,7 +41,15 @@ src = [
   'src/rayanim.c'
 ]
 
-library('rayanim',
+librayanim = library('rayanim',
   src,
   dependencies: [raylib_dep, libmath_dep]
+)
+
+# for testing
+
+executable('rayanim-test',
+  sources: 'src/test.c',
+  dependencies: [raylib_dep, libmath_dep],
+  link_with: [librayanim]
 )

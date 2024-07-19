@@ -10,20 +10,18 @@ static uint32_t object_id = 0;
 static uint32_t animation_id = 0;
 
 void RA_ObjectList_init(RA_ObjectList *obj_list) {
-  assert(obj_list == NULL);
-
   obj_list->count = 0;
   obj_list->capacity = DA_INIT_SIZE;
   obj_list->objects = malloc(DA_INIT_SIZE * sizeof(RA_Object));
-  assert(obj_list->objects == NULL);
+  assert(obj_list->objects != NULL);
 }
 
 void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj) {
-  assert(obj_list == NULL);
+  assert(obj_list != NULL);
 
   if (obj_list->count == obj_list->capacity) {
     obj_list->capacity *= 2;
-    assert(realloc(obj_list->objects, obj_list->capacity * sizeof(RA_Object)));
+    assert(realloc(obj_list->objects, obj_list->capacity * sizeof(RA_Object)) != NULL);
   }
 
   obj_list->objects[obj_list->count] = new_obj;
@@ -31,7 +29,7 @@ void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj) {
 }
 
 RA_Object *RA_ObjectList_pop(RA_ObjectList *obj_list) {
-  assert(obj_list == NULL);
+  assert(obj_list != NULL);
 
   if (obj_list->count == 0) return NULL;
 
@@ -39,7 +37,7 @@ RA_Object *RA_ObjectList_pop(RA_ObjectList *obj_list) {
 }
 
 RA_Object *RA_ObjectList_getAt(RA_ObjectList *obj_list, uint32_t idx) {
-  assert(obj_list == NULL);
+  assert(obj_list != NULL);
 
   if (obj_list->count <= idx) return NULL;
 
@@ -47,7 +45,7 @@ RA_Object *RA_ObjectList_getAt(RA_ObjectList *obj_list, uint32_t idx) {
 }
 
 void RA_ObjectList_set(RA_ObjectList *obj_list, uint32_t idx, RA_Object *new_obj) {
-  assert(obj_list == NULL);
+  assert(obj_list != NULL);
 
   if (obj_list->count <= idx) return;
 
@@ -66,21 +64,18 @@ void RA_ObjectList_destroy(RA_ObjectList *obj_list) {
 }
 
 void RA_AnimationList_init(RA_AnimationList *anim_list) {
-  assert(anim_list == NULL);
-
   anim_list->count = 0;
   anim_list->capacity = DA_INIT_SIZE;
   anim_list->animations = malloc(DA_INIT_SIZE * sizeof(RA_Animation));
-
-  assert(anim_list->animations == NULL);
+  assert(anim_list->animations != NULL);
 }
 
 void RA_AnimationList_push(RA_AnimationList *anim_list, RA_Animation *new_anim) {
-  assert(anim_list == NULL);
+  assert(anim_list != NULL);
 
   if (anim_list->count == anim_list->capacity) {
     anim_list->capacity *= 2;
-    assert(realloc(anim_list->animations, anim_list->capacity * sizeof(RA_Animation)));
+    assert(realloc(anim_list->animations, anim_list->capacity * sizeof(RA_Animation)) != NULL);
   }
 
   anim_list->animations[anim_list->count] = new_anim;
@@ -88,7 +83,7 @@ void RA_AnimationList_push(RA_AnimationList *anim_list, RA_Animation *new_anim) 
 }
 
 RA_Animation *RA_AnimationList_pop(RA_AnimationList *anim_list) {
-  assert(anim_list == NULL);
+  assert(anim_list != NULL);
 
   if (anim_list->count == 0) return NULL;
 
@@ -96,7 +91,7 @@ RA_Animation *RA_AnimationList_pop(RA_AnimationList *anim_list) {
 }
 
 RA_Animation *RA_AnimationList_getAt(RA_AnimationList *anim_list, uint32_t idx) {
-  assert(anim_list == NULL);
+  assert(anim_list != NULL);
 
   if (anim_list->count <= idx) return NULL;
 
@@ -104,7 +99,7 @@ RA_Animation *RA_AnimationList_getAt(RA_AnimationList *anim_list, uint32_t idx) 
 }
 
 void RA_AnimationList_set(RA_AnimationList *anim_list, uint32_t idx, RA_Animation *new_anim) {
-  assert(anim_list == NULL);
+  assert(anim_list != NULL);
 
   if (anim_list->count <= idx) return;
 
@@ -158,8 +153,6 @@ bool RA_Animation_defaultUpdate(void *self, float dt) {
 }
 
 void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color) {
-  assert(scene == NULL);
-
   scene->current_animation = NULL;
   scene->color = color;
   scene->width = width;
@@ -171,7 +164,7 @@ void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Co
 }
 
 void RA_Scene_play(RA_Scene *scene, RA_Animation *anim) {
-  assert((scene == NULL) && (anim == NULL));
+  assert((scene != NULL) && (anim != NULL));
 
   RA_AnimationList_push(&scene->animation_list, anim);
 }
@@ -189,7 +182,7 @@ void RA_Scene_render(RA_Scene *scene) {
 }
 
 void RA_Scene_update(RA_Scene *scene, float dt) {
-  if ((scene->current_animation != NULL) && (scene->animation_list.count > 0)) {
+  if ((scene->current_animation == NULL) && (scene->animation_list.count > 0)) {
     scene->current_animation = RA_AnimationList_pop(&scene->animation_list);
     RA_Object *current_obj = scene->current_animation->object;
     if (!RA_ObjectList_contains(&scene->object_list, current_obj))
@@ -254,11 +247,18 @@ void RA_Circle_init(RA_Circle *circle,
 }
 
 void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius) {
-  RA_Circle_init(circle, center, radius, 3.0f, 100, BLUE, DARKBLUE, RA_Circle_render);
+  RA_Circle_init(circle, center, radius, 25.0f, 100, BLUE, DARKBLUE, RA_Circle_defaultRender);
 }
 
-void RA_Circle_render(void *self) {
+void RA_Circle_defaultRender(void *self) {
   RA_Circle *circle = (RA_Circle *)self;
+
+  DrawCircleSector(circle->base.position,
+                   circle->radius + circle->outline_thickness / 2,
+                   0.0f,
+                   circle->angle,
+                   circle->segments,
+                   circle->outline_color);
 
   DrawCircleSector(circle->base.position,
                    circle->radius,
@@ -266,13 +266,6 @@ void RA_Circle_render(void *self) {
                    circle->angle,
                    circle->segments,
                    circle->circle_color);
-
-  DrawCircleSectorLines(circle->base.position,
-                        circle->radius,
-                        0.0f,
-                        circle->angle,
-                        circle->segments,
-                        circle->outline_color);
 }
 
 void RA_CircleAnimation_init(RA_Animation *anim,
@@ -285,13 +278,13 @@ void RA_CircleAnimation_init(RA_Animation *anim,
 
 void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
   RA_CircleAnimation_init(
-      anim, circle, 1.5f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
+      anim, circle, 1.0f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
 }
 
 void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
   RA_Animation *anim = (RA_Animation *)self;
   RA_Circle *circle = (RA_Circle *)anim->object;
-  circle->angle = time * 2 * PI;
+  circle->angle = time * 360.0f;
 }
 
 // --------------- RA_Circle ---------------
