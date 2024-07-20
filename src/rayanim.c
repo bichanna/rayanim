@@ -172,7 +172,10 @@ bool RA_Animation_defaultUpdate(void *self, float dt) {
   anim->elapsed_time += dt;
   anim->interpolate(anim, fminf(anim->elapsed_time / anim->duration, 1.0f));
 
-  return anim->elapsed_time >= anim->duration;
+  bool completed = anim->elapsed_time >= anim->duration;
+  if (completed) anim->elapsed_time = 0.0f;
+
+  return completed;
 }
 
 void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color) {
@@ -209,8 +212,8 @@ void RA_Scene_update(RA_Scene *scene, float dt) {
     scene->current_animation = RA_AnimationList_popFirst(&scene->animation_list);
     RA_Object *current_obj = scene->current_animation->object;
     TraceLog(LOG_INFO, "started animation #%i", scene->current_animation->_id);
-    if (!RA_ObjectList_contains(&scene->object_list, current_obj))
-      RA_ObjectList_push(&scene->object_list, current_obj);
+    // if (!RA_ObjectList_contains(&scene->object_list, current_obj))
+    RA_ObjectList_push(&scene->object_list, current_obj);
   }
 
   if ((scene->current_animation != NULL) &&
@@ -251,7 +254,7 @@ void recordScene(RA_Scene *scene) {
   scene = scene;
 }
 
-// ---------------------------- Built-In RA_Objects ----------------------------
+// ------------------------------ Built-In RA_Objects & RA_Animations ------------------------------
 
 // --------------- RA_Circle ---------------
 
@@ -279,15 +282,31 @@ void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius) {
 void RA_Circle_defaultRender(void *self) {
   RA_Circle *circle = (RA_Circle *)self;
 
+  float inner_radius = circle->radius - circle->outline_thickness / 2;
+  float outer_radius = circle->radius + circle->outline_thickness / 2;
+  DrawRing(circle->base.position,
+           inner_radius,
+           outer_radius,
+           0.0f,
+           circle->angle,
+           circle->segments,
+           circle->outline_color);
+}
+
+void RA_Circle_fillInnerRender(void *self) {
+  RA_Circle *circle = (RA_Circle *)self;
+
+  float half_thickness = circle->outline_thickness / 2;
+
   DrawCircleSector(circle->base.position,
-                   circle->radius + circle->outline_thickness / 2,
+                   circle->radius + half_thickness,
                    0.0f,
                    circle->angle,
                    circle->segments,
                    circle->outline_color);
 
   DrawCircleSector(circle->base.position,
-                   circle->radius,
+                   circle->radius - half_thickness,
                    0.0f,
                    circle->angle,
                    circle->segments,
