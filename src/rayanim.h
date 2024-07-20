@@ -57,12 +57,15 @@ void RA_ObjectList_destroy(RA_ObjectList *obj_list);
 void RA_AnimationList_init(RA_AnimationList *anim_list);
 void RA_AnimationList_push(RA_AnimationList *anim_list, RA_Animation *new_anim);
 RA_Animation *RA_AnimationList_pop(RA_AnimationList *anim_list);
+RA_Animation *RA_AnimationList_popFirst(RA_AnimationList *anim_list);
 RA_Animation *RA_AnimationList_getAt(RA_AnimationList *anim_list, uint32_t idx);
 void RA_AnimationList_set(RA_AnimationList *anim_list, uint32_t idx, RA_Animation *new_anim);
 bool RA_AnimationList_contains(RA_AnimationList *anim_list, RA_Animation *anim);
 void RA_AnimationList_destroy(RA_AnimationList *anim_list);
 
 void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *));
+void RA_Object_initEmpty(RA_Object *obj);
+void RA_Object_emptyRender(void *self);
 
 void RA_Animation_init(RA_Animation *anim,
                        RA_Object *obj,
@@ -117,5 +120,12 @@ void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle);
 void RA_CircleAnimation_defaultInterpolate(void *self, float time);
 
 // --------------- RA_Circle ---------------
+
+// ---------------- RA_Wait ----------------
+
+void RA_WaitAnimation_init(RA_Animation *anim, float duration);
+void RA_WaitAnimation_interpolate(void *self, float time);
+
+// ---------------- RA_Wait ----------------
 
 #endif  // RAYANIM_H

@@ -90,6 +90,21 @@ RA_Animation *RA_AnimationList_pop(RA_AnimationList *anim_list) {
   return anim_list->animations[--anim_list->count];
 }
 
+RA_Animation *RA_AnimationList_popFirst(RA_AnimationList *anim_list) {
+  assert(anim_list != NULL);
+
+  if (anim_list->count == 0) return NULL;
+
+  RA_Animation *first_anim = anim_list->animations[0];
+
+  for (uint32_t i = 1; i < anim_list->count; i++)
+    anim_list->animations[i - 1] = anim_list->animations[i];
+
+  anim_list->count--;
+
+  return first_anim;
+}
+
 RA_Animation *RA_AnimationList_getAt(RA_AnimationList *anim_list, uint32_t idx) {
   assert(anim_list != NULL);
 
@@ -121,6 +136,14 @@ void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *)) {
   obj->_id = ++object_id;
   obj->position = position;
   obj->render = render;
+}
+
+void RA_Object_initEmpty(RA_Object *obj) {
+  RA_Object_init(obj, (Vector2){0, 0}, RA_Object_emptyRender);
+}
+
+void RA_Object_emptyRender(void *self) {
+  (void)self;
 }
 
 void RA_Animation_init(RA_Animation *anim,
@@ -175,7 +198,7 @@ void RA_Scene_render(RA_Scene *scene) {
   ClearBackground(scene->color);
   for (uint32_t i = 0; i < scene->object_list.count; i++) {
     RA_Object *obj = RA_ObjectList_getAt(&scene->object_list, i);
-    obj->render(obj);
+    if (obj != NULL) obj->render(obj);
   }
 
   EndDrawing();
@@ -183,15 +206,18 @@ void RA_Scene_render(RA_Scene *scene) {
 
 void RA_Scene_update(RA_Scene *scene, float dt) {
   if ((scene->current_animation == NULL) && (scene->animation_list.count > 0)) {
-    scene->current_animation = RA_AnimationList_pop(&scene->animation_list);
+    scene->current_animation = RA_AnimationList_popFirst(&scene->animation_list);
     RA_Object *current_obj = scene->current_animation->object;
+    TraceLog(LOG_INFO, "started animation #%i", scene->current_animation->_id);
     if (!RA_ObjectList_contains(&scene->object_list, current_obj))
       RA_ObjectList_push(&scene->object_list, current_obj);
   }
 
   if ((scene->current_animation != NULL) &&
-      (scene->current_animation->update(scene->current_animation, dt)))
+      (scene->current_animation->update(scene->current_animation, dt))) {
+    TraceLog(LOG_INFO, "finished animation #%i", scene->current_animation->_id);
     scene->current_animation = NULL;
+  }
 }
 
 void RA_Scene_destroy(RA_Scene *scene) {
@@ -278,7 +304,7 @@ void RA_CircleAnimation_init(RA_Animation *anim,
 
 void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
   RA_CircleAnimation_init(
-      anim, circle, 1.0f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
+      anim, circle, 0.7f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
 }
 
 void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
@@ -288,3 +314,20 @@ void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
 }
 
 // --------------- RA_Circle ---------------
+
+// ---------------- RA_Wait ----------------
+
+static RA_Object wait_object;
+
+void RA_WaitAnimation_init(RA_Animation *anim, float duration) {
+  RA_Object_initEmpty(&wait_object);
+  RA_Animation_init(
+      anim, &wait_object, duration, RA_Animation_defaultUpdate, RA_WaitAnimation_interpolate);
+}
+
+void RA_WaitAnimation_interpolate(void *self, float time) {
+  (void)time;
+  (void)self;
+}
+
+// ---------------- RA_Wait ----------------

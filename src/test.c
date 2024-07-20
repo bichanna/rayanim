@@ -10,6 +10,10 @@ int main(void) {
   RA_Animation circle1_anim;
   RA_CircleAnimation_defaultInit(&circle1_anim, &circle1);
 
+  RA_Animation wait;
+  RA_WaitAnimation_init(&wait, 3);
+
+  RA_Scene_play(&scene, &wait);
   RA_Scene_play(&scene, &circle1_anim);
 
   playScene(&scene);
