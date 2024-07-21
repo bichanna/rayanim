@@ -2,9 +2,8 @@
 
 #include <assert.h>
 #include <math.h>
+#include <raylib.h>
 #include <stdlib.h>
-
-#include "raylib.h"
 
 static uint32_t object_id = 0;
 static uint32_t animation_id = 0;
@@ -173,7 +172,7 @@ bool RA_Animation_defaultUpdate(void *self, float dt) {
   anim->interpolate(anim, fminf(anim->elapsed_time / anim->duration, 1.0f));
 
   bool completed = anim->elapsed_time >= anim->duration;
-  if (completed) anim->elapsed_time = 0.0f;
+  if (completed) anim->elapsed_time = -1.0f;
 
   return completed;
 }
@@ -231,7 +230,7 @@ void RA_Scene_destroy(RA_Scene *scene) {
 
 void playScene(RA_Scene *scene) {
   InitWindow(scene->width, scene->height, scene->title);
-  SetTargetFPS(60);
+  SetTargetFPS(120);
 
   float last_time = GetTime();
 
@@ -263,15 +262,15 @@ void RA_Circle_init(RA_Circle *circle,
                     float radius,
                     float outline_thickness,
                     int segments,
-                    Color circle_color,
+                    Color inner_color,
                     Color outline_color,
                     void (*render)(void *)) {
   RA_Object_init(&circle->base, center, render);
   circle->radius = radius;
-  circle->angle = 0.0f;
+  circle->_angle = 0.0f;
   circle->outline_thickness = outline_thickness;
   circle->segments = segments;
-  circle->circle_color = circle_color;
+  circle->inner_color = inner_color;
   circle->outline_color = outline_color;
 }
 
@@ -288,7 +287,7 @@ void RA_Circle_defaultRender(void *self) {
            inner_radius,
            outer_radius,
            0.0f,
-           circle->angle,
+           circle->_angle,
            circle->segments,
            circle->outline_color);
 }
@@ -301,16 +300,16 @@ void RA_Circle_fillInnerRender(void *self) {
   DrawCircleSector(circle->base.position,
                    circle->radius + half_thickness,
                    0.0f,
-                   circle->angle,
+                   circle->_angle,
                    circle->segments,
                    circle->outline_color);
 
   DrawCircleSector(circle->base.position,
                    circle->radius - half_thickness,
                    0.0f,
-                   circle->angle,
+                   circle->_angle,
                    circle->segments,
-                   circle->circle_color);
+                   circle->inner_color);
 }
 
 void RA_CircleAnimation_init(RA_Animation *anim,
@@ -329,10 +328,195 @@ void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
 void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
   RA_Animation *anim = (RA_Animation *)self;
   RA_Circle *circle = (RA_Circle *)anim->object;
-  circle->angle = time * 360.0f;
+  circle->_angle = time * 360.0f;
 }
 
 // --------------- RA_Circle ---------------
+
+// ------------- RA_Rectangle --------------
+
+void RA_Rectangle_init(RA_Rectangle *rect,
+                       Vector2 position,
+                       float width,
+                       float height,
+                       float outline_thickness,
+                       Color inner_color,
+                       Color outline_color,
+                       void (*render)(void *)) {
+  RA_Object_init(&rect->base, position, render);
+  rect->width = width;
+  rect->height = height;
+  rect->outline_thickness = outline_thickness;
+  rect->_time = 0.0f;
+  rect->_duration = 0.0f;
+  rect->_elapsed_time = 0.0f;
+  rect->inner_color = inner_color;
+  rect->outline_color = outline_color;
+}
+
+void RA_Rectangle_defaultInit(
+    RA_Rectangle *rect, Vector2 position, float width, float height, float outline_thickness) {
+  RA_Rectangle_init(rect,
+                    position,
+                    width,
+                    height,
+                    outline_thickness,
+                    GREEN,
+                    DARKGREEN,
+                    RA_Rectangle_defaultRender);
+}
+
+void RA_Rectangle_defaultRender(void *self) {
+  RA_Rectangle *rect = (RA_Rectangle *)self;
+
+  float half_thickness = rect->outline_thickness / 2.0f;
+  float quarter_duration = rect->_duration / 4.0f;
+  bool fst_quarter_done = false;
+  bool snd_quarter_done = false;
+  bool thrd_quarter_done = false;
+
+  if (rect->_elapsed_time <= quarter_duration) {
+    float p = fminf(rect->_elapsed_time / quarter_duration, 1.0f);
+    float new_x = rect->base.position.x + rect->width * p + half_thickness;
+    DrawLineEx(rect->base.position,
+               (Vector2){new_x, rect->base.position.y},
+               rect->outline_thickness,
+               rect->outline_color);
+  } else {
+    DrawLineEx(
+        rect->base.position,
+        (Vector2){rect->base.position.x + rect->width + half_thickness, rect->base.position.y},
+        rect->outline_thickness,
+        rect->outline_color);
+    fst_quarter_done = true;
+  }
+
+  if (fst_quarter_done) {
+    float p = fminf((rect->_elapsed_time - quarter_duration) / quarter_duration, 1.0f);
+    float x = rect->base.position.x + rect->width;
+    float old_y = rect->base.position.y + half_thickness;
+    float new_y = old_y + rect->height * p + half_thickness;
+    DrawLineEx(
+        (Vector2){x, old_y}, (Vector2){x, new_y}, rect->outline_thickness, rect->outline_color);
+
+    if (p >= 1.0f) snd_quarter_done = true;
+  }
+
+  if (snd_quarter_done) {
+    float p = fminf((rect->_elapsed_time - quarter_duration * 2) / quarter_duration, 1.0f);
+    float y = rect->base.position.y + rect->height + half_thickness;
+    float old_x = rect->base.position.x + rect->width + half_thickness;
+    float new_x = old_x - rect->width * p - half_thickness;
+    DrawLineEx(
+        (Vector2){old_x, y}, (Vector2){new_x, y}, rect->outline_thickness, rect->outline_color);
+
+    if (p >= 1.0f) thrd_quarter_done = true;
+  }
+
+  if (thrd_quarter_done) {
+    float p = fminf((rect->_elapsed_time - quarter_duration * 3) / quarter_duration, 1.0f);
+    float x = rect->base.position.x + half_thickness;
+    float old_y = rect->base.position.y + rect->height + half_thickness;
+    float new_y = old_y - rect->height * p - half_thickness;
+    DrawLineEx(
+        (Vector2){x, old_y}, (Vector2){x, new_y}, rect->outline_thickness, rect->outline_color);
+  }
+}
+
+void RA_Rectangle_fillInnerRender(void *self) {
+  RA_Rectangle *rect = (RA_Rectangle *)self;
+
+  float half_thickness = rect->outline_thickness / 2.0f;
+  float quarter_duration = rect->_duration / 4.0f;
+  bool fst_quarter_done = false;
+  bool snd_quarter_done = false;
+  bool thrd_quarter_done = false;
+
+#define FIRST_QUARTER                                                                              \
+  DrawLineEx(                                                                                      \
+      rect->base.position,                                                                         \
+      (Vector2){rect->base.position.x + rect->width + half_thickness, rect->base.position.y},      \
+      rect->outline_thickness,                                                                     \
+      rect->outline_color);
+
+  if (rect->_elapsed_time <= quarter_duration) {
+    float p = fminf(rect->_elapsed_time / quarter_duration, 1.0f);
+    float new_x = rect->base.position.x + rect->width * p + half_thickness;
+    DrawLineEx(rect->base.position,
+               (Vector2){new_x, rect->base.position.y},
+               rect->outline_thickness,
+               rect->outline_color);
+  } else {
+    FIRST_QUARTER;
+    fst_quarter_done = true;
+  }
+
+  if (fst_quarter_done) {
+    float p = fminf((rect->_elapsed_time - quarter_duration) / quarter_duration, 1.0f);
+    float x = rect->base.position.x + rect->width;
+    float old_y = rect->base.position.y + half_thickness;
+    float new_y = old_y + rect->height * p + half_thickness;
+    DrawTriangle((Vector2){rect->base.position.x, rect->base.position.y + half_thickness},
+                 (Vector2){x - half_thickness, new_y},
+                 (Vector2){x, old_y},
+                 rect->inner_color);
+    FIRST_QUARTER;
+    DrawLineEx(
+        (Vector2){x, old_y}, (Vector2){x, new_y}, rect->outline_thickness, rect->outline_color);
+
+    if (p >= 1.0f) snd_quarter_done = true;
+  }
+
+  if (snd_quarter_done) {
+    float p = fminf((rect->_elapsed_time - quarter_duration * 2) / quarter_duration, 1.0f);
+    float y = rect->base.position.y + rect->height + half_thickness;
+    float old_x = rect->base.position.x + rect->width + half_thickness;
+    float new_x = old_x - rect->width * p - half_thickness;
+    DrawTriangle((Vector2){rect->base.position.x, rect->base.position.y + half_thickness},
+                 (Vector2){new_x, y - half_thickness},
+                 (Vector2){old_x, y},
+                 rect->inner_color);
+    FIRST_QUARTER;
+    DrawLineEx(
+        (Vector2){old_x, y}, (Vector2){new_x, y}, rect->outline_thickness, rect->outline_color);
+
+    if (p >= 1.0f) thrd_quarter_done = true;
+  }
+
+  if (thrd_quarter_done) {
+    float p = fminf((rect->_elapsed_time - quarter_duration * 3) / quarter_duration, 1.0f);
+    float x = rect->base.position.x + half_thickness;
+    float old_y = rect->base.position.y + rect->height + half_thickness;
+    float new_y = old_y - rect->height * p - half_thickness;
+    DrawLineEx((Vector2){x, old_y},
+               (Vector2){x, new_y},
+               rect->outline_thickness,
+               rect->outline_color);
+  }
+}
+
+void RA_RectangleAnimation_init(RA_Animation *anim,
+                                RA_Rectangle *rect,
+                                float duration,
+                                bool (*update)(void *, float),
+                                void (*interpolate)(void *, float)) {
+  RA_Animation_init(anim, (RA_Object *)rect, duration, update, interpolate);
+}
+
+void RA_RectangleAnimation_defaultInit(RA_Animation *anim, RA_Rectangle *rect) {
+  RA_RectangleAnimation_init(
+      anim, rect, 0.7, RA_Animation_defaultUpdate, RA_RectangleAnimation_defaultInterpolate);
+}
+
+void RA_RectangleAnimation_defaultInterpolate(void *self, float time) {
+  RA_Animation *anim = (RA_Animation *)self;
+  RA_Rectangle *rect = (RA_Rectangle *)anim->object;
+  rect->_time = time;
+  rect->_duration = anim->duration;
+  rect->_elapsed_time = anim->elapsed_time;
+}
+
+// ------------- RA_Rectangle --------------
 
 // ---------------- RA_Wait ----------------
 
