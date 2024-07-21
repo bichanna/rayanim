@@ -278,6 +278,12 @@ void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius) {
   RA_Circle_init(circle, center, radius, 25.0f, 100, BLUE, DARKBLUE, RA_Circle_defaultRender);
 }
 
+RA_Circle RA_Circle_create(Vector2 center, float radius) {
+  RA_Circle circle;
+  RA_Circle_defaultInit(&circle, center, radius);
+  return circle;
+}
+
 void RA_Circle_defaultRender(void *self) {
   RA_Circle *circle = (RA_Circle *)self;
 
@@ -325,6 +331,12 @@ void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
       anim, circle, 0.7f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
 }
 
+RA_Animation RA_CircleAnimation_create(RA_Circle *circle) {
+  RA_Animation anim;
+  RA_CircleAnimation_defaultInit(&anim, circle);
+  return anim;
+}
+
 void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
   RA_Animation *anim = (RA_Animation *)self;
   RA_Circle *circle = (RA_Circle *)anim->object;
@@ -354,16 +366,15 @@ void RA_Rectangle_init(RA_Rectangle *rect,
   rect->outline_color = outline_color;
 }
 
-void RA_Rectangle_defaultInit(
-    RA_Rectangle *rect, Vector2 position, float width, float height, float outline_thickness) {
-  RA_Rectangle_init(rect,
-                    position,
-                    width,
-                    height,
-                    outline_thickness,
-                    GREEN,
-                    DARKGREEN,
-                    RA_Rectangle_defaultRender);
+void RA_Rectangle_defaultInit(RA_Rectangle *rect, Vector2 position, float width, float height) {
+  RA_Rectangle_init(
+      rect, position, width, height, 25.0f, GREEN, DARKGREEN, RA_Rectangle_defaultRender);
+}
+
+RA_Rectangle RA_Rectangle_create(Vector2 position, float width, float height) {
+  RA_Rectangle rect;
+  RA_Rectangle_defaultInit(&rect, position, width, height);
+  return rect;
 }
 
 void RA_Rectangle_defaultRender(void *self) {
@@ -488,10 +499,8 @@ void RA_Rectangle_fillInnerRender(void *self) {
     float x = rect->base.position.x + half_thickness;
     float old_y = rect->base.position.y + rect->height + half_thickness;
     float new_y = old_y - rect->height * p - half_thickness;
-    DrawLineEx((Vector2){x, old_y},
-               (Vector2){x, new_y},
-               rect->outline_thickness,
-               rect->outline_color);
+    DrawLineEx(
+        (Vector2){x, old_y}, (Vector2){x, new_y}, rect->outline_thickness, rect->outline_color);
   }
 }
 
@@ -506,6 +515,12 @@ void RA_RectangleAnimation_init(RA_Animation *anim,
 void RA_RectangleAnimation_defaultInit(RA_Animation *anim, RA_Rectangle *rect) {
   RA_RectangleAnimation_init(
       anim, rect, 0.7, RA_Animation_defaultUpdate, RA_RectangleAnimation_defaultInterpolate);
+}
+
+RA_Animation RA_RectangleAnimation_create(RA_Rectangle *rect) {
+  RA_Animation anim;
+  RA_RectangleAnimation_defaultInit(&anim, rect);
+  return anim;
 }
 
 void RA_RectangleAnimation_defaultInterpolate(void *self, float time) {
@@ -526,6 +541,12 @@ void RA_WaitAnimation_init(RA_Animation *anim, float duration) {
   RA_Object_initEmpty(&wait_object);
   RA_Animation_init(
       anim, &wait_object, duration, RA_Animation_defaultUpdate, RA_WaitAnimation_interpolate);
+}
+
+RA_Animation RA_WaitAnimation_create(float duration) {
+  RA_Animation anim;
+  RA_WaitAnimation_init(&anim, duration);
+  return anim;
 }
 
 void RA_WaitAnimation_interpolate(void *self, float time) {

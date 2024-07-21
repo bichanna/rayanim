@@ -110,6 +110,7 @@ void RA_Circle_init(RA_Circle *circle,
                     Color outline_color,
                     void (*render)(void *));
 void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius);
+RA_Circle RA_Circle_create(Vector2 center, float radius);
 void RA_Circle_defaultRender(void *self);
 void RA_Circle_fillInnerRender(void *self);
 void RA_CircleAnimation_init(RA_Animation *anim,
@@ -118,6 +119,7 @@ void RA_CircleAnimation_init(RA_Animation *anim,
                              bool (*update)(void *, float),
                              void (*interpolate)(void *, float));
 void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle);
+RA_Animation RA_CircleAnimation_create(RA_Circle *circle);
 void RA_CircleAnimation_defaultInterpolate(void *self, float time);
 
 // --------------- RA_Circle ---------------
@@ -144,9 +146,10 @@ void RA_Rectangle_init(RA_Rectangle *rect,
                        Color inner_color,
                        Color outline_color,
                        void (*render)(void *));
-void RA_Rectangle_defaultInit(
-    RA_Rectangle *rect, Vector2 position, float width, float height, float outline_thickness);
+void RA_Rectangle_defaultInit(RA_Rectangle *rect, Vector2 position, float width, float height);
+RA_Rectangle RA_Rectangle_create(Vector2 position, float width, float height);
 void RA_Rectangle_defaultRender(void *self);
+void RA_Rectangle_defaultDisappearRender(void *self);
 void RA_Rectangle_fillInnerRender(void *self);
 void RA_RectangleAnimation_init(RA_Animation *anim,
                                 RA_Rectangle *rect,
@@ -154,6 +157,7 @@ void RA_RectangleAnimation_init(RA_Animation *anim,
                                 bool (*update)(void *, float),
                                 void (*interpolate)(void *, float));
 void RA_RectangleAnimation_defaultInit(RA_Animation *anim, RA_Rectangle *rect);
+RA_Animation RA_RectangleAnimation_create(RA_Rectangle *rect);
 void RA_RectangleAnimation_defaultInterpolate(void *self, float time);
 
 // ------------- RA_Rectangle --------------
@@ -161,6 +165,7 @@ void RA_RectangleAnimation_defaultInterpolate(void *self, float time);
 // ---------------- RA_Wait ----------------
 
 void RA_WaitAnimation_init(RA_Animation *anim, float duration);
+RA_Animation RA_WaitAnimation_create(float duration);
 void RA_WaitAnimation_interpolate(void *self, float time);
 
 // ---------------- RA_Wait ----------------
