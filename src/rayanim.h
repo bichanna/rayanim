@@ -149,7 +149,6 @@ void RA_Rectangle_init(RA_Rectangle *rect,
 void RA_Rectangle_defaultInit(RA_Rectangle *rect, Vector2 position, float width, float height);
 RA_Rectangle RA_Rectangle_create(Vector2 position, float width, float height);
 void RA_Rectangle_defaultRender(void *self);
-void RA_Rectangle_defaultDisappearRender(void *self);
 void RA_Rectangle_fillInnerRender(void *self);
 void RA_RectangleAnimation_init(RA_Animation *anim,
                                 RA_Rectangle *rect,
@@ -169,5 +168,19 @@ RA_Animation RA_WaitAnimation_create(float duration);
 void RA_WaitAnimation_interpolate(void *self, float time);
 
 // ---------------- RA_Wait ----------------
+
+// -------------- RA_Disappear -------------
+
+void RA_DisappearAnimation_init(RA_Animation *anim,
+                                RA_Object *obj,
+                                float duration,
+                                bool (*update)(void *, float),
+                                void (*interpolate)(void *, float));
+void RA_DisappearAnimation_defaultInit(RA_Animation *anim, RA_Object *obj);
+RA_Animation RA_DisappearAnimation_create(RA_Object *obj);
+void RA_DisappearAnimation_defaultInterpolate(void *self, float time);
+void RA_DisappearAnimation_defaultRender(void *self);
+
+// -------------- RA_Disappear -------------
 
 #endif  // RAYANIM_H

@@ -52,12 +52,15 @@ int main(void) {
   RA_Animation rect1_anim = RA_RectangleAnimation_create(&rect1);
   rect1_anim.duration = 2.2f;
 
+  RA_Animation circle1_disappear_anim = RA_DisappearAnimation_create((RA_Object *)&circle1);
+
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, &circle1_anim);
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, &circle2_anim);
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, &rect1_anim);
+  RA_Scene_play(&scene, &circle1_disappear_anim);
 
   playScene(&scene);
 

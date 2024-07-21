@@ -210,14 +210,14 @@ void RA_Scene_update(RA_Scene *scene, float dt) {
   if ((scene->current_animation == NULL) && (scene->animation_list.count > 0)) {
     scene->current_animation = RA_AnimationList_popFirst(&scene->animation_list);
     RA_Object *current_obj = scene->current_animation->object;
-    TraceLog(LOG_INFO, "started animation #%i", scene->current_animation->_id);
+    TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->current_animation->_id);
     // if (!RA_ObjectList_contains(&scene->object_list, current_obj))
     RA_ObjectList_push(&scene->object_list, current_obj);
   }
 
   if ((scene->current_animation != NULL) &&
       (scene->current_animation->update(scene->current_animation, dt))) {
-    TraceLog(LOG_INFO, "finished animation #%i", scene->current_animation->_id);
+    TraceLog(LOG_INFO, "RayAnim: Finished Animation #%i", scene->current_animation->_id);
     scene->current_animation = NULL;
   }
 }
@@ -555,3 +555,36 @@ void RA_WaitAnimation_interpolate(void *self, float time) {
 }
 
 // ---------------- RA_Wait ----------------
+
+// -------------- RA_Disappear -------------
+
+void RA_DisappearAnimation_init(RA_Animation *anim,
+                                RA_Object *obj,
+                                float duration,
+                                bool (*update)(void *, float),
+                                void (*interpolate)(void *, float)) {
+  RA_Animation_init(anim, obj, duration, update, interpolate);
+}
+
+void RA_DisappearAnimation_defaultInit(RA_Animation *anim, RA_Object *obj) {
+  RA_DisappearAnimation_init(
+      anim, obj, 0.0f, RA_Animation_defaultUpdate, RA_DisappearAnimation_defaultInterpolate);
+}
+
+RA_Animation RA_DisappearAnimation_create(RA_Object *obj) {
+  RA_Animation anim;
+  RA_DisappearAnimation_defaultInit(&anim, obj);
+  return anim;
+}
+
+void RA_DisappearAnimation_defaultInterpolate(void *self, float time) {
+  (void)time;
+  RA_Animation *anim = (RA_Animation *)self;
+  anim->object->render = RA_DisappearAnimation_defaultRender;
+}
+
+void RA_DisappearAnimation_defaultRender(void *self) {
+  (void)self;
+}
+
+// -------------- RA_Disappear -------------
