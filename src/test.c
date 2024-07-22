@@ -44,7 +44,7 @@ int main(void) {
   circle2.outline_thickness = 20.0f;
   circle2.base.render = RA_Circle_fillInnerRender;
   RA_Animation circle2_anim = RA_CircleAnimation_create(&circle2);
-  circle2_anim.duration = 0.1f;
+  circle2_anim.duration = 1.8f;
 
   RA_Rectangle rect1 = RA_Rectangle_create((Vector2){300, 700}, 2000, 600);
   rect1.base.render = RA_Rectangle_fillInnerRender;
@@ -54,12 +54,13 @@ int main(void) {
 
   RA_Animation circle1_disappear_anim = RA_DisappearAnimation_create((RA_Object *)&circle1);
 
+  RA_Animation *sync_anims[] = {&circle1_anim, &circle2_anim};
+  RA_SyncAnimation circles_anim = RA_SyncAnimation_create(sync_anims, 2);
+
   RA_Scene_play(&scene, &wait1sec);
-  RA_Scene_play(&scene, &circle1_anim);
-  RA_Scene_play(&scene, &wait1sec);
-  RA_Scene_play(&scene, &circle2_anim);
-  RA_Scene_play(&scene, &wait1sec);
+  RA_Scene_play(&scene, (RA_Animation *)&circles_anim);
   RA_Scene_play(&scene, &rect1_anim);
+  RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, &circle1_disappear_anim);
 
   startScene(&scene);

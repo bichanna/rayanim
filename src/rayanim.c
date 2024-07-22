@@ -149,20 +149,27 @@ void RA_Animation_init(RA_Animation *anim,
                        RA_Object *obj,
                        float duration,
                        bool (*update)(void *, float),
-                       void (*interpolate)(void *, float)) {
+                       void (*interpolate)(void *, float),
+                       void (*push_to_object_list)(RA_Scene *)) {
   anim->_id = ++animation_id;
   anim->object = obj;
   anim->duration = duration;
   anim->elapsed_time = 0.0f;
   anim->update = update;
   anim->interpolate = interpolate;
+  anim->push_to_object_list = push_to_object_list;
 }
 
 void RA_Animation_defaultInit(RA_Animation *anim,
                               RA_Object *obj,
                               float duration,
                               void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim, obj, duration, RA_Animation_defaultUpdate, interpolate);
+  RA_Animation_init(anim,
+                    obj,
+                    duration,
+                    RA_Animation_defaultUpdate,
+                    interpolate,
+                    RA_Animation_defaultPushToObjectList);
 }
 
 bool RA_Animation_defaultUpdate(void *self, float dt) {
@@ -175,6 +182,12 @@ bool RA_Animation_defaultUpdate(void *self, float dt) {
   if (completed) anim->elapsed_time = -1.0f;
 
   return completed;
+}
+
+void RA_Animation_defaultPushToObjectList(RA_Scene *scene) {
+  RA_Object *current_obj = scene->current_animation->object;
+  TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->current_animation->_id);
+  RA_ObjectList_push(&scene->object_list, current_obj);
 }
 
 void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color) {
@@ -209,10 +222,11 @@ void RA_Scene_render(RA_Scene *scene) {
 void RA_Scene_update(RA_Scene *scene, float dt) {
   if ((scene->current_animation == NULL) && (scene->animation_list.count > 0)) {
     scene->current_animation = RA_AnimationList_popFirst(&scene->animation_list);
-    RA_Object *current_obj = scene->current_animation->object;
-    TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->current_animation->_id);
-    // if (!RA_ObjectList_contains(&scene->object_list, current_obj))
-    RA_ObjectList_push(&scene->object_list, current_obj);
+    scene->current_animation->push_to_object_list(scene);
+    // RA_Object *current_obj = scene->current_animation->object;
+    // TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->current_animation->_id);
+    // // if (!RA_ObjectList_contains(&scene->object_list, current_obj))
+    // RA_ObjectList_push(&scene->object_list, current_obj);
   }
 
   if ((scene->current_animation != NULL) &&
@@ -323,7 +337,12 @@ void RA_CircleAnimation_init(RA_Animation *anim,
                              float duration,
                              bool (*update)(void *, float),
                              void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim, (RA_Object *)circle, duration, update, interpolate);
+  RA_Animation_init(anim,
+                    (RA_Object *)circle,
+                    duration,
+                    update,
+                    interpolate,
+                    RA_Animation_defaultPushToObjectList);
 }
 
 void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
@@ -509,7 +528,8 @@ void RA_RectangleAnimation_init(RA_Animation *anim,
                                 float duration,
                                 bool (*update)(void *, float),
                                 void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim, (RA_Object *)rect, duration, update, interpolate);
+  RA_Animation_init(
+      anim, (RA_Object *)rect, duration, update, interpolate, RA_Animation_defaultPushToObjectList);
 }
 
 void RA_RectangleAnimation_defaultInit(RA_Animation *anim, RA_Rectangle *rect) {
@@ -539,8 +559,12 @@ static RA_Object wait_object;
 
 void RA_WaitAnimation_init(RA_Animation *anim, float duration) {
   RA_Object_initEmpty(&wait_object);
-  RA_Animation_init(
-      anim, &wait_object, duration, RA_Animation_defaultUpdate, RA_WaitAnimation_interpolate);
+  RA_Animation_init(anim,
+                    &wait_object,
+                    duration,
+                    RA_Animation_defaultUpdate,
+                    RA_WaitAnimation_interpolate,
+                    RA_Animation_defaultPushToObjectList);
 }
 
 RA_Animation RA_WaitAnimation_create(float duration) {
@@ -563,7 +587,7 @@ void RA_DisappearAnimation_init(RA_Animation *anim,
                                 float duration,
                                 bool (*update)(void *, float),
                                 void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim, obj, duration, update, interpolate);
+  RA_Animation_init(anim, obj, duration, update, interpolate, RA_Animation_defaultPushToObjectList);
 }
 
 void RA_DisappearAnimation_defaultInit(RA_Animation *anim, RA_Object *obj) {
@@ -588,3 +612,73 @@ void RA_DisappearAnimation_defaultRender(void *self) {
 }
 
 // -------------- RA_Disappear -------------
+
+// ---------------- RA_Sync ----------------
+
+void RA_SyncAnimation_init(RA_SyncAnimation *anim,
+                           RA_Animation **anims,
+                           uint8_t anim_count,
+                           void (*push_to_object_list)(RA_Scene *)) {
+  RA_Animation_init((RA_Animation *)anim,
+                    NULL,
+                    0,
+                    RA_SyncAnimation_defaultUpdate,
+                    RA_SyncAnimation_defaultInterpolate,
+                    push_to_object_list);
+  anim->animations = anims;
+  anim->anim_count = anim_count;
+}
+
+void RA_SyncAnimation_defaultInit(RA_SyncAnimation *anim,
+                                  RA_Animation **anims,
+                                  uint8_t anim_count) {
+  RA_SyncAnimation_init(anim, anims, anim_count, RA_SyncAnimation_defaultPushToObjectList);
+}
+
+RA_SyncAnimation RA_SyncAnimation_create(RA_Animation **anims, uint8_t anim_count) {
+  RA_SyncAnimation anim;
+  RA_SyncAnimation_defaultInit(&anim, anims, anim_count);
+  return anim;
+}
+
+bool RA_SyncAnimation_defaultUpdate(void *self, float dt) {
+  RA_SyncAnimation *anim = (RA_SyncAnimation *)self;
+  uint8_t completed_num = 0;
+
+  for (uint8_t i = 0; i < anim->anim_count; i++) {
+    RA_Animation *each = anim->animations[i];
+
+    if (each->elapsed_time != -1.0f) {
+      each->elapsed_time += dt;
+      each->interpolate(each, fminf(each->elapsed_time / each->duration, 1.0f));
+    } else {
+      completed_num++;
+      continue;
+    }
+
+    bool completed = (each->elapsed_time >= each->duration);
+    if (completed) {
+      completed_num++;
+      each->elapsed_time = -1.0f;
+    }
+  }
+
+  return completed_num == anim->anim_count;
+}
+
+void RA_SyncAnimation_defaultInterpolate(void *self, float time) {
+  (void)self;
+  (void)time;
+}
+
+void RA_SyncAnimation_defaultPushToObjectList(RA_Scene *scene) {
+  RA_SyncAnimation *anim = (RA_SyncAnimation *)scene->current_animation;
+  for (uint8_t i = 0; i < anim->anim_count; i++) {
+    RA_Animation *each_anim = anim->animations[i];
+    RA_Object *each_obj = each_anim->object;
+    TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", each_anim->_id);
+    RA_ObjectList_push(&scene->object_list, each_obj);
+  }
+}
+
+// ---------------- RA_Sync ----------------

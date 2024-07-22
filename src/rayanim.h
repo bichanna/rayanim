@@ -7,6 +7,8 @@
 
 #define DA_INIT_SIZE 12
 
+typedef struct RA_Scene RA_Scene;
+
 typedef struct RA_Object {
   uint32_t _id;
   Vector2 position;
@@ -28,6 +30,7 @@ typedef struct RA_Animation {
 
   bool (*update)(void *, float);
   void (*interpolate)(void *, float);
+  void (*push_to_object_list)(RA_Scene *);
 } RA_Animation;
 
 typedef struct RA_AnimationList {
@@ -36,7 +39,7 @@ typedef struct RA_AnimationList {
   uint32_t capacity;
 } RA_AnimationList;
 
-typedef struct RA_Scene {
+struct RA_Scene {
   RA_ObjectList object_list;
   RA_AnimationList animation_list;
   RA_Animation *current_animation;
@@ -44,7 +47,7 @@ typedef struct RA_Scene {
   const char *title;
   int width;
   int height;
-} RA_Scene;
+};
 
 void RA_ObjectList_init(RA_ObjectList *obj_list);
 void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj);
@@ -71,12 +74,14 @@ void RA_Animation_init(RA_Animation *anim,
                        RA_Object *obj,
                        float duration,
                        bool (*update)(void *, float),
-                       void (*interpolate)(void *, float));
+                       void (*interpolate)(void *, float),
+                       void (*push_to_object_list)(RA_Scene *));
 void RA_Animation_defaultInit(RA_Animation *anim,
                               RA_Object *obj,
                               float duration,
                               void (*interpolate)(void *, float));
 bool RA_Animation_defaultUpdate(void *self, float dt);
+void RA_Animation_defaultPushToObjectList(RA_Scene *scene);
 
 void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color);
 void RA_Scene_play(RA_Scene *scene, RA_Animation *anim);
@@ -182,5 +187,25 @@ void RA_DisappearAnimation_defaultInterpolate(void *self, float time);
 void RA_DisappearAnimation_defaultRender(void *self);
 
 // -------------- RA_Disappear -------------
+
+// ---------------- RA_Sync ----------------
+
+typedef struct RA_SyncAnimation {
+  RA_Animation base;
+  RA_Animation **animations;
+  uint8_t anim_count;
+} RA_SyncAnimation;
+
+void RA_SyncAnimation_init(RA_SyncAnimation *anim,
+                           RA_Animation **anims,
+                           uint8_t anim_count,
+                           void (*push_to_object_list)(RA_Scene *));
+void RA_SyncAnimation_defaultInit(RA_SyncAnimation *anim, RA_Animation **anims, uint8_t anim_count);
+RA_SyncAnimation RA_SyncAnimation_create(RA_Animation **anims, uint8_t anim_count);
+bool RA_SyncAnimation_defaultUpdate(void *self, float dt);
+void RA_SyncAnimation_defaultInterpolate(void *self, float time);
+void RA_SyncAnimation_defaultPushToObjectList(RA_Scene *scene);
+
+// ---------------- RA_Sync ----------------
 
 #endif  // RAYANIM_H
