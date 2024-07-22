@@ -228,7 +228,7 @@ void RA_Scene_destroy(RA_Scene *scene) {
   scene = NULL;
 }
 
-void playScene(RA_Scene *scene) {
+void startScene(RA_Scene *scene) {
   InitWindow(scene->width, scene->height, scene->title);
   SetTargetFPS(120);
 

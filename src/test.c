@@ -62,7 +62,7 @@ int main(void) {
   RA_Scene_play(&scene, &rect1_anim);
   RA_Scene_play(&scene, &circle1_disappear_anim);
 
-  playScene(&scene);
+  startScene(&scene);
 
   RA_Scene_destroy(&scene);
 

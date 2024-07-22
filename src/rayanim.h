@@ -84,7 +84,7 @@ void RA_Scene_render(RA_Scene *scene);
 void RA_Scene_update(RA_Scene *scene, float dt);
 void RA_Scene_destroy(RA_Scene *scene);
 
-void playScene(RA_Scene *scene);
+void startScene(RA_Scene *scene);
 void recordScene(RA_Scene *scene);
 
 // ------------------------------ Built-In RA_Objects & RA_Animations ------------------------------
