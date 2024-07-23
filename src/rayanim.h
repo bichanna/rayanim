@@ -27,6 +27,7 @@ typedef struct RA_Animation {
   RA_Object *object;
   float duration;
   float elapsed_time;
+  bool done;
 
   bool (*update)(void *, float);
   void (*interpolate)(void *, float);
@@ -207,5 +208,30 @@ void RA_SyncAnimation_defaultInterpolate(void *self, float time);
 void RA_SyncAnimation_defaultPushToObjectList(RA_Scene *scene);
 
 // ---------------- RA_Sync ----------------
+
+// ---------------- RA_Move ----------------
+
+typedef struct RA_MoveAnimation {
+  RA_Animation base;
+  RA_Animation *target_anim;
+  Vector2 initial_position;
+  Vector2 target_position;
+} RA_MoveAnimation;
+
+void RA_MoveAnimation_init(RA_MoveAnimation *anim,
+                           RA_Animation *target_anim,
+                           float duration,
+                           Vector2 target_pos,
+                           bool (*update)(void *, float),
+                           void (*interpolate)(void *, float),
+                           void (*push_to_object_list)(RA_Scene *));
+void RA_MoveAnimation_defaultInit(RA_MoveAnimation *anim,
+                                  RA_Animation *target_anim,
+                                  Vector2 target_pos);
+RA_MoveAnimation RA_MoveAnimation_create(RA_Animation *target_anim, Vector2 target_pos);
+bool RA_MoveAnimation_defaultUpdate(void *self, float dt);
+void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene);
+
+// ---------------- RA_Move ----------------
 
 #endif  // RAYANIM_H
