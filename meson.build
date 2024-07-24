@@ -38,7 +38,8 @@ raylib_dep = declare_dependency(
 libmath_dep = cc.find_library('m', required: true)
 
 src = [
-  'src/rayanim.c'
+  'src/rayanim.c',
+  'src/rayanim.h'
 ]
 
 librayanim = library('rayanim',

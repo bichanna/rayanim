@@ -4,6 +4,7 @@
 #include <raylib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define DA_INIT_SIZE 12
 
@@ -233,5 +234,42 @@ bool RA_MoveAnimation_defaultUpdate(void *self, float dt);
 void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene);
 
 // ---------------- RA_Move ----------------
+
+// ---------------- RA_Text ----------------
+
+typedef struct RA_Text {
+  RA_Object base;
+  Font font;
+  Color tint;
+  float spacing;
+  float font_size;
+  char *full_text;
+  float char_reveal_time;
+  size_t display_char_count;
+  float _elapsed_time;
+} RA_Text;
+
+void RA_Text_init(RA_Text *text,
+                  char *full_text,
+                  Font font,
+                  Color tint,
+                  float char_reveal_time,
+                  float font_size,
+                  float spacing,
+                  Vector2 pos,
+                  void (*render)(void *));
+void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos);
+RA_Text RA_Text_create(char *full_text, Vector2 pos);
+void RA_Text_defaultRender(void *self);
+void RA_TextAnimation_init(RA_Animation *anim,
+                           RA_Text *text,
+                           float duration,
+                           bool (*update)(void *, float),
+                           void (*interpolate)(void *, float));
+void RA_TextAnimation_defaultInit(RA_Animation *anim, RA_Text *text);
+RA_Animation RA_TextAnimation_create(RA_Text *text);
+void RA_TextAnimation_defaultInterpolate(void *self, float time);
+
+// ---------------- RA_Text ----------------
 
 #endif  // RAYANIM_H

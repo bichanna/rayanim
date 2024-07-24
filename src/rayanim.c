@@ -4,6 +4,7 @@
 #include <math.h>
 #include <raylib.h>
 #include <stdlib.h>
+#include <string.h>
 
 static uint32_t object_id = 0;
 static uint32_t animation_id = 0;
@@ -756,3 +757,85 @@ void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene) {
 }
 
 // ---------------- RA_Move ----------------
+
+// ---------------- RA_Text ----------------
+
+void RA_Text_init(RA_Text *text,
+                  char *full_text,
+                  Font font,
+                  Color tint,
+                  float char_reveal_time,
+                  float font_size,
+                  float spacing,
+                  Vector2 pos,
+                  void (*render)(void *)) {
+  RA_Object_init(&text->base, pos, render);
+  text->font = font;
+  text->tint = tint;
+  text->spacing = spacing;
+  text->font_size = font_size;
+  text->full_text = full_text;
+  text->display_char_count = 0;
+  text->char_reveal_time = char_reveal_time;
+  text->_elapsed_time = 0.0f;
+}
+
+void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos) {
+  RA_Text_init(
+      text, full_text, GetFontDefault(), BLACK, 0.03f, 100, 1.0f, pos, RA_Text_defaultRender);
+}
+
+RA_Text RA_Text_create(char *full_text, Vector2 pos) {
+  RA_Text text;
+  RA_Text_defaultInit(&text, full_text, pos);
+  return text;
+}
+
+void RA_Text_defaultRender(void *self) {
+  RA_Text *text = (RA_Text *)self;
+
+  char display_text[text->display_char_count + 1];
+
+  if ((text->_elapsed_time >= (text->char_reveal_time * text->display_char_count)) &&
+      (text->display_char_count <= strlen(text->full_text))) {
+    text->display_char_count++;
+  }
+
+  strncpy(display_text, text->full_text, text->display_char_count - 1);
+  display_text[text->display_char_count - 1] = '\0';
+
+  DrawTextEx(
+      text->font, display_text, text->base.position, text->font_size, text->spacing, text->tint);
+}
+
+void RA_TextAnimation_init(RA_Animation *anim,
+                           RA_Text *text,
+                           float duration,
+                           bool (*update)(void *, float),
+                           void (*interpolate)(void *, float)) {
+  RA_Animation_init(
+      anim, (RA_Object *)text, duration, update, interpolate, RA_Animation_defaultPushToObjectList);
+}
+
+void RA_TextAnimation_defaultInit(RA_Animation *anim, RA_Text *text) {
+  RA_TextAnimation_init(anim,
+                        text,
+                        text->char_reveal_time * strlen(text->full_text),
+                        RA_Animation_defaultUpdate,
+                        RA_TextAnimation_defaultInterpolate);
+}
+
+RA_Animation RA_TextAnimation_create(RA_Text *text) {
+  RA_Animation anim;
+  RA_TextAnimation_defaultInit(&anim, text);
+  return anim;
+}
+
+void RA_TextAnimation_defaultInterpolate(void *self, float time) {
+  (void)time;
+  RA_Animation *anim = (RA_Animation *)self;
+  RA_Text *text = (RA_Text *)anim->object;
+  text->_elapsed_time = anim->elapsed_time;
+}
+
+// ---------------- RA_Text ----------------

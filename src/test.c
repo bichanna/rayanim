@@ -1,4 +1,5 @@
 #include "rayanim.h"
+#include "raylib.h"
 
 int main(void) {
   RA_Scene scene;
@@ -32,12 +33,17 @@ int main(void) {
 
   RA_MoveAnimation rect1_move = RA_MoveAnimation_create(&rect1_anim, (Vector2){200, 600});
 
+  RA_Text text1 = RA_Text_create("Hello, this is rayanim!", (Vector2){800, 800});
+  RA_Animation text1_anim = RA_TextAnimation_create(&text1);
+
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, (RA_Animation *)&circles_anim);
   RA_Scene_play(&scene, &rect1_anim);
   RA_Scene_play(&scene, (RA_Animation *)&rect1_move);
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, &circle1_disappear_anim);
+  RA_Scene_play(&scene, &wait1sec);
+  RA_Scene_play(&scene, &text1_anim);
 
   startScene(&scene);
 
