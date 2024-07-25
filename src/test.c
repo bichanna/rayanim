@@ -24,9 +24,8 @@ int main(void) {
   rect1.base.render = RA_Rectangle_fillInnerRender;
   rect1.outline_thickness = 10.0f;
   RA_Animation rect1_anim = RA_RectangleAnimation_create(&rect1);
-  rect1_anim.duration = 2.2f;
-
-  RA_Animation circle1_disappear_anim = RA_DisappearAnimation_create((RA_Object *)&circle1);
+  rect1_anim.duration = 2.2f; RA_Animation circle1_disappear_anim =
+  RA_DisappearAnimation_create((RA_Object *)&circle1);
 
   RA_Animation *sync_anims[] = {&circle1_anim, &circle2_anim};
   RA_SyncAnimation circles_anim = RA_SyncAnimation_create(sync_anims, 2);
@@ -36,6 +35,12 @@ int main(void) {
   RA_Text text1 = RA_Text_create("Hello, this is rayanim!", (Vector2){800, 800});
   RA_Animation text1_anim = RA_TextAnimation_create(&text1);
 
+  RA_Image image1 = RA_Image_create("/home/nobu/Downloads/bach-fun.png", (Vector2){100, 100});
+  RA_Animation image1_anim = RA_ImageAnimation_create(&image1);
+
+  RA_Animation *sync_anims2[] = {&image1_anim, &text1_anim};
+  RA_SyncAnimation sync_image1_text1 = RA_SyncAnimation_create(sync_anims2, 2);
+
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, (RA_Animation *)&circles_anim);
   RA_Scene_play(&scene, &rect1_anim);
@@ -43,7 +48,7 @@ int main(void) {
   RA_Scene_play(&scene, &wait1sec);
   RA_Scene_play(&scene, &circle1_disappear_anim);
   RA_Scene_play(&scene, &wait1sec);
-  RA_Scene_play(&scene, &text1_anim);
+  RA_Scene_play(&scene, (RA_Animation *)&sync_image1_text1);
 
   startScene(&scene);
 

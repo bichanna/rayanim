@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+static RA_TextureList texture_list;
 static uint32_t object_id = 0;
 static uint32_t animation_id = 0;
 
 void RA_ObjectList_init(RA_ObjectList *obj_list) {
   obj_list->count = 0;
   obj_list->capacity = DA_INIT_SIZE;
-  obj_list->objects = malloc(DA_INIT_SIZE * sizeof(RA_Object));
+  obj_list->objects = malloc(DA_INIT_SIZE * sizeof(RA_Object *));
   assert(obj_list->objects != NULL);
 }
 
@@ -21,7 +22,7 @@ void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj) {
 
   if (obj_list->count == obj_list->capacity) {
     obj_list->capacity *= 2;
-    assert(realloc(obj_list->objects, obj_list->capacity * sizeof(RA_Object)) != NULL);
+    assert(realloc(obj_list->objects, obj_list->capacity * sizeof(RA_Object *)) != NULL);
   }
 
   obj_list->objects[obj_list->count] = new_obj;
@@ -66,7 +67,7 @@ void RA_ObjectList_destroy(RA_ObjectList *obj_list) {
 void RA_AnimationList_init(RA_AnimationList *anim_list) {
   anim_list->count = 0;
   anim_list->capacity = DA_INIT_SIZE;
-  anim_list->animations = malloc(DA_INIT_SIZE * sizeof(RA_Animation));
+  anim_list->animations = malloc(DA_INIT_SIZE * sizeof(RA_Animation *));
   assert(anim_list->animations != NULL);
 }
 
@@ -75,7 +76,7 @@ void RA_AnimationList_push(RA_AnimationList *anim_list, RA_Animation *new_anim) 
 
   if (anim_list->count == anim_list->capacity) {
     anim_list->capacity *= 2;
-    assert(realloc(anim_list->animations, anim_list->capacity * sizeof(RA_Animation)) != NULL);
+    assert(realloc(anim_list->animations, anim_list->capacity * sizeof(RA_Animation *)) != NULL);
   }
 
   anim_list->animations[anim_list->count] = new_anim;
@@ -130,6 +131,33 @@ bool RA_AnimationList_contains(RA_AnimationList *anim_list, RA_Animation *anim) 
 
 void RA_AnimationList_destroy(RA_AnimationList *anim_list) {
   free(anim_list->animations);
+}
+
+void RA_TextureList_init(RA_TextureList *texture_list) {
+  texture_list->count = 0;
+  texture_list->capacity = DA_INIT_SIZE;
+  texture_list->textures = malloc(DA_INIT_SIZE * sizeof(Texture));
+  assert(texture_list->textures != NULL);
+}
+
+void RA_TextureList_push(RA_TextureList *texture_list, Texture new_texture) {
+  assert(texture_list != NULL);
+
+  if (texture_list->count == texture_list->capacity) {
+    texture_list->capacity *= 2;
+    assert(realloc(texture_list->textures, texture_list->capacity * sizeof(Texture)) != NULL);
+  }
+
+  texture_list->textures[texture_list->count] = new_texture;
+  texture_list->count++;
+}
+
+void RA_TextureList_unloadAll(RA_TextureList *texture_list) {
+  for (uint32_t i = 0; i < texture_list->count; i++) UnloadTexture(texture_list->textures[i]);
+}
+
+void RA_TextureList_destroy(RA_TextureList *texture_list) {
+  free(texture_list->textures);
 }
 
 void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *)) {
@@ -201,8 +229,16 @@ void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Co
   scene->height = height;
   scene->title = title;
 
+  RA_TextureList_init(&texture_list);
+
   RA_ObjectList_init(&scene->object_list);
   RA_AnimationList_init(&scene->animation_list);
+
+  InitWindow(scene->width, scene->height, scene->title);
+}
+
+void RA_Scene_defaultInit(RA_Scene *scene, const char *title) {
+  RA_Scene_init(scene, title, 2400, 1600, RAYWHITE);
 }
 
 void RA_Scene_play(RA_Scene *scene, RA_Animation *anim) {
@@ -246,10 +282,12 @@ void RA_Scene_destroy(RA_Scene *scene) {
   RA_ObjectList_destroy(&scene->object_list);
   RA_AnimationList_destroy(&scene->animation_list);
   scene = NULL;
+
+  RA_TextureList_unloadAll(&texture_list);
+  RA_TextureList_destroy(&texture_list);
 }
 
 void startScene(RA_Scene *scene) {
-  InitWindow(scene->width, scene->height, scene->title);
   SetTargetFPS(120);
 
   float last_time = GetTime();
@@ -782,7 +820,7 @@ void RA_Text_init(RA_Text *text,
 
 void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos) {
   RA_Text_init(
-      text, full_text, GetFontDefault(), BLACK, 0.03f, 100, 1.0f, pos, RA_Text_defaultRender);
+      text, full_text, GetFontDefault(), BLACK, 0.03f, 100, 12.5f, pos, RA_Text_defaultRender);
 }
 
 RA_Text RA_Text_create(char *full_text, Vector2 pos) {
@@ -839,3 +877,72 @@ void RA_TextAnimation_defaultInterpolate(void *self, float time) {
 }
 
 // ---------------- RA_Text ----------------
+
+// --------------- RA_Image ----------------
+
+void RA_Image_init(RA_Image *image,
+                   char *image_path,
+                   Vector2 pos,
+                   float scale,
+                   Color tint,
+                   void (*render)(void *)) {
+  RA_Object_init(&image->base, pos, render);
+  image->image_path = image_path;
+  image->scale = scale;
+  image->alpha = 0;
+  image->tint = tint;
+
+  Texture raylib_Texture = LoadTexture(image_path);
+  RA_TextureList_push(&texture_list, raylib_Texture);
+
+  image->texture_idx = texture_list.count - 1;
+}
+
+void RA_Image_defaultInit(RA_Image *Texture, char *image_path, Vector2 pos) {
+  RA_Image_init(Texture, image_path, pos, 1.0f, RAYWHITE, RA_Image_defaultRender);
+}
+
+RA_Image RA_Image_create(char *image_path, Vector2 pos) {
+  RA_Image Texture;
+  RA_Image_defaultInit(&Texture, image_path, pos);
+  return Texture;
+}
+
+void RA_Image_defaultRender(void *self) {
+  RA_Image *image = (RA_Image *)self;
+  Texture texture = texture_list.textures[image->texture_idx];
+  Color tint = {image->tint.r, image->tint.g, image->tint.b, image->alpha};
+  DrawTextureEx(texture, image->base.position, 0.0f, image->scale, tint);
+}
+
+void RA_ImageAnimation_init(RA_Animation *anim,
+                            RA_Image *Texture,
+                            float duration,
+                            bool (*update)(void *, float),
+                            void (*interpolate)(void *, float)) {
+  RA_Animation_init(anim,
+                    (RA_Object *)Texture,
+                    duration,
+                    update,
+                    interpolate,
+                    RA_Animation_defaultPushToObjectList);
+}
+
+void RA_ImageAnimation_defaultInit(RA_Animation *anim, RA_Image *Texture) {
+  RA_ImageAnimation_init(
+      anim, Texture, 0.8f, RA_Animation_defaultUpdate, RA_ImageAnimation_defaultInterpolate);
+}
+
+RA_Animation RA_ImageAnimation_create(RA_Image *Texture) {
+  RA_Animation anim;
+  RA_ImageAnimation_defaultInit(&anim, Texture);
+  return anim;
+}
+
+void RA_ImageAnimation_defaultInterpolate(void *self, float time) {
+  RA_Animation *anim = (RA_Animation *)self;
+  RA_Image *Texture = (RA_Image *)anim->object;
+  Texture->alpha = (uint8_t)(255 * time);
+}
+
+// --------------- RA_Image ----------------
