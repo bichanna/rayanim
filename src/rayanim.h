@@ -151,11 +151,13 @@ typedef struct RA_Rectangle {
   float width;
   float height;
   float outline_thickness;
-  float _time;
-  float _duration;
-  float _elapsed_time;
   Color inner_color;
   Color outline_color;
+
+  float fst_quarter;
+  float snd_quarter;
+  float thrd_quarter;
+  float last_quarter;
 } RA_Rectangle;
 
 void RA_Rectangle_init(RA_Rectangle *rect,

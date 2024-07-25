@@ -22,7 +22,7 @@ int main(void) {
 
   RA_Rectangle rect1 = RA_Rectangle_create((Vector2){300, 700}, 2000, 600);
   rect1.base.render = RA_Rectangle_fillInnerRender;
-  rect1.outline_thickness = 10.0f;
+  rect1.outline_thickness = 18.0f;
   RA_Animation rect1_anim = RA_RectangleAnimation_create(&rect1);
   rect1_anim.duration = 2.2f;
   RA_Animation circle1_disappear_anim = RA_DisappearAnimation_create((RA_Object *)&circle1);
@@ -43,18 +43,18 @@ int main(void) {
 
   RA_Rectangle square1 = RA_Square_create((Vector2){2000, 1000}, 200);
   square1.outline_color = RED;
+  square1.inner_color = RED;
+  square1.base.render = RA_Rectangle_fillInnerRender;
   RA_Animation square1_anim = RA_RectangleAnimation_create(&square1);
 
-  RA_Animation *anims[] = {
-    &wait1sec,
-    (RA_Animation *)&circles_anim,
-    &rect1_anim,
-    (RA_Animation *)&rect1_move,
-    &wait1sec,
-    &circle1_disappear_anim,
-    (RA_Animation *)&sync_image1_text1,
-    &square1_anim
-  };
+  RA_Animation *anims[] = {&wait1sec,
+                           (RA_Animation *)&circles_anim,
+                           &rect1_anim,
+                           (RA_Animation *)&rect1_move,
+                           &wait1sec,
+                           &circle1_disappear_anim,
+                           (RA_Animation *)&sync_image1_text1,
+                           &square1_anim};
 
   RA_Scene_play_these(&scene, anims, 8);
 
