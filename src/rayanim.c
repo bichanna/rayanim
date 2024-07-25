@@ -247,6 +247,11 @@ void RA_Scene_play(RA_Scene *scene, RA_Animation *anim) {
   RA_AnimationList_push(&scene->animation_list, anim);
 }
 
+void RA_Scene_play_these(RA_Scene *scene, RA_Animation **anims, int anim_count) {
+  for (int i = 0; i < anim_count; i++)
+    RA_Scene_play(scene, anims[i]);
+}
+
 void RA_Scene_render(RA_Scene *scene) {
   BeginDrawing();
 
@@ -596,6 +601,31 @@ void RA_RectangleAnimation_defaultInterpolate(void *self, float time) {
 }
 
 // ------------- RA_Rectangle --------------
+
+// -------------- RA_Square ----------------
+
+void RA_Square_init(RA_Rectangle *square,
+                    Vector2 position,
+                    float length,
+                    float outline_thickness,
+                    Color inner_color,
+                    Color outline_color,
+                    void (*render)(void *)) {
+  RA_Rectangle_init(
+      square, position, length, length, outline_thickness, inner_color, outline_color, render);
+}
+
+void RA_Square_defaultInit(RA_Rectangle *square, Vector2 position, float length) {
+  RA_Rectangle_defaultInit(square, position, length, length);
+}
+
+RA_Rectangle RA_Square_create(Vector2 position, float length) {
+  RA_Rectangle square;
+  RA_Square_defaultInit(&square, position, length);
+  return square;
+}
+
+// -------------- RA_Square ----------------
 
 // ---------------- RA_Wait ----------------
 

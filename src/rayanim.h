@@ -99,6 +99,7 @@ void RA_Animation_defaultPushToObjectList(RA_Scene *scene);
 void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color);
 void RA_Scene_defaultInit(RA_Scene *scene, const char *title);
 void RA_Scene_play(RA_Scene *scene, RA_Animation *anim);
+void RA_Scene_play_these(RA_Scene *scene, RA_Animation **anims, int anim_count);
 void RA_Scene_render(RA_Scene *scene);
 void RA_Scene_update(RA_Scene *scene, float dt);
 void RA_Scene_destroy(RA_Scene *scene);
@@ -179,6 +180,20 @@ RA_Animation RA_RectangleAnimation_create(RA_Rectangle *rect);
 void RA_RectangleAnimation_defaultInterpolate(void *self, float time);
 
 // ------------- RA_Rectangle --------------
+
+// -------------- RA_Square ----------------
+
+void RA_Square_init(RA_Rectangle *square,
+                    Vector2 position,
+                    float length,
+                    float outline_thickness,
+                    Color inner_color,
+                    Color outline_color,
+                    void (*render)(void *));
+void RA_Square_defaultInit(RA_Rectangle *square, Vector2 position, float length);
+RA_Rectangle RA_Square_create(Vector2 position, float length);
+
+// -------------- RA_Square ----------------
 
 // ---------------- RA_Wait ----------------
 
