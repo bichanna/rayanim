@@ -276,7 +276,6 @@ typedef struct RA_Text {
   char *full_text;
   float char_reveal_time;
   size_t display_char_count;
-  float _elapsed_time;
 } RA_Text;
 
 void RA_Text_init(RA_Text *text,

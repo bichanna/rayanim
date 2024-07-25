@@ -814,7 +814,6 @@ void RA_Text_init(RA_Text *text,
   text->full_text = full_text;
   text->display_char_count = 0;
   text->char_reveal_time = char_reveal_time;
-  text->_elapsed_time = 0.0f;
 }
 
 void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos) {
@@ -831,12 +830,7 @@ RA_Text RA_Text_create(char *full_text, Vector2 pos) {
 void RA_Text_defaultRender(void *self) {
   RA_Text *text = (RA_Text *)self;
 
-  char display_text[text->display_char_count + 1];
-
-  if ((text->_elapsed_time >= (text->char_reveal_time * text->display_char_count)) &&
-      (text->display_char_count <= strlen(text->full_text))) {
-    text->display_char_count++;
-  }
+  char display_text[text->display_char_count];
 
   strncpy(display_text, text->full_text, text->display_char_count - 1);
   display_text[text->display_char_count - 1] = '\0';
@@ -872,7 +866,10 @@ void RA_TextAnimation_defaultInterpolate(void *self, float time) {
   (void)time;
   RA_Animation *anim = (RA_Animation *)self;
   RA_Text *text = (RA_Text *)anim->object;
-  text->_elapsed_time = anim->elapsed_time;
+
+  if ((anim->elapsed_time >= (text->char_reveal_time * text->display_char_count)) &&
+      (text->display_char_count <= strlen(text->full_text)))
+    text->display_char_count++;
 }
 
 // ---------------- RA_Text ----------------
