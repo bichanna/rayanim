@@ -57,6 +57,12 @@ typedef struct RA_TextureList {
   uint32_t capacity;
 } RA_TextureList;
 
+typedef struct RA_FontList {
+  Font *fonts;
+  uint32_t count;
+  uint32_t capacity;
+} RA_FontList;
+
 void RA_ObjectList_init(RA_ObjectList *obj_list);
 void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj);
 RA_Object *RA_ObjectList_pop(RA_ObjectList *obj_list);
@@ -78,6 +84,11 @@ void RA_TextureList_init(RA_TextureList *texture_list);
 void RA_TextureList_push(RA_TextureList *texture_list, Texture new_texture);
 void RA_TextureList_unloadAll(RA_TextureList *texture_list);
 void RA_TextureList_destroy(RA_TextureList *texture_list);
+
+void RA_FontList_init(RA_FontList *font_list);
+void RA_FontList_push(RA_FontList *font_list, Font new_font);
+void RA_FontList_unloadAll(RA_FontList *font_list);
+void RA_FontList_destroy(RA_FontList *font_list);
 
 void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *));
 void RA_Object_initEmpty(RA_Object *obj);
@@ -269,7 +280,7 @@ void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene);
 
 typedef struct RA_Text {
   RA_Object base;
-  Font font;
+  uint32_t font_idx;
   Color tint;
   float spacing;
   float font_size;
@@ -280,7 +291,7 @@ typedef struct RA_Text {
 
 void RA_Text_init(RA_Text *text,
                   char *full_text,
-                  Font font,
+                  char *font_path,
                   Color tint,
                   float char_reveal_time,
                   float font_size,
@@ -290,6 +301,8 @@ void RA_Text_init(RA_Text *text,
 void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos);
 RA_Text RA_Text_create(char *full_text, Vector2 pos);
 void RA_Text_defaultRender(void *self);
+void RA_Text_setFont(RA_Text *text, char *font_path);
+void RA_Text_setFontEx(RA_Text *text, char *font_path, int font_size, int *codepoints, int codepoint_count);
 void RA_TextAnimation_init(RA_Animation *anim,
                            RA_Text *text,
                            float duration,

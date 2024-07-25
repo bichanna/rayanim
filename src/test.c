@@ -33,6 +33,7 @@ int main(void) {
   RA_MoveAnimation rect1_move = RA_MoveAnimation_create(&rect1_anim, (Vector2){200, 600});
 
   RA_Text text1 = RA_Text_create("Hello, this is rayanim!", (Vector2){800, 800});
+  RA_Text_setFontEx(&text1, "Iosevka-Bold.ttf", 255, NULL, 0);
   RA_Animation text1_anim = RA_TextAnimation_create(&text1);
 
   RA_Image image1 = RA_Image_create("/home/nobu/Downloads/bach-fun.png", (Vector2){100, 100});

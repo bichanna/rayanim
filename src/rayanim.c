@@ -7,6 +7,7 @@
 #include <string.h>
 
 static RA_TextureList texture_list;
+static RA_FontList font_list;
 static uint32_t object_id = 0;
 static uint32_t animation_id = 0;
 
@@ -160,6 +161,33 @@ void RA_TextureList_destroy(RA_TextureList *texture_list) {
   free(texture_list->textures);
 }
 
+void RA_FontList_init(RA_FontList *font_list) {
+  font_list->count = 0;
+  font_list->capacity = DA_INIT_SIZE;
+  font_list->fonts = malloc(DA_INIT_SIZE * sizeof(Font));
+  assert(font_list->fonts != NULL);
+}
+
+void RA_FontList_push(RA_FontList *font_list, Font new_font) {
+  assert(font_list != NULL);
+
+  if (font_list->count == font_list->capacity) {
+    font_list->capacity *= 2;
+    assert(realloc(font_list->fonts, font_list->capacity * sizeof(Font)) != NULL);
+  }
+
+  font_list->fonts[font_list->count] = new_font;
+  font_list->count++;
+}
+
+void RA_FontList_unloadAll(RA_FontList *font_list) {
+  for (uint32_t i = 0; i < font_list->count; i++) UnloadFont(font_list->fonts[i]);
+}
+
+void RA_FontList_destroy(RA_FontList *font_list) {
+  free(font_list);
+}
+
 void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *)) {
   obj->_id = ++object_id;
   obj->position = position;
@@ -230,6 +258,9 @@ void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Co
   scene->title = title;
 
   RA_TextureList_init(&texture_list);
+  RA_FontList_init(&font_list);
+
+  RA_FontList_push(&font_list, GetFontDefault());
 
   RA_ObjectList_init(&scene->object_list);
   RA_AnimationList_init(&scene->animation_list);
@@ -289,6 +320,9 @@ void RA_Scene_destroy(RA_Scene *scene) {
 
   RA_TextureList_unloadAll(&texture_list);
   RA_TextureList_destroy(&texture_list);
+
+  RA_FontList_unloadAll(&font_list);
+  RA_FontList_destroy(&font_list);
 }
 
 void startScene(RA_Scene *scene) {
@@ -799,7 +833,7 @@ void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene) {
 
 void RA_Text_init(RA_Text *text,
                   char *full_text,
-                  Font font,
+                  char *font_path,
                   Color tint,
                   float char_reveal_time,
                   float font_size,
@@ -807,18 +841,22 @@ void RA_Text_init(RA_Text *text,
                   Vector2 pos,
                   void (*render)(void *)) {
   RA_Object_init(&text->base, pos, render);
-  text->font = font;
   text->tint = tint;
   text->spacing = spacing;
   text->font_size = font_size;
   text->full_text = full_text;
   text->display_char_count = 0;
   text->char_reveal_time = char_reveal_time;
+
+  if (font_path != NULL) {
+    RA_Text_setFont(text, font_path);
+  } else {
+    text->font_idx = 0;
+  }
 }
 
 void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos) {
-  RA_Text_init(
-      text, full_text, GetFontDefault(), BLACK, 0.03f, 100, 12.5f, pos, RA_Text_defaultRender);
+  RA_Text_init(text, full_text, NULL, BLACK, 0.03f, 100, 12.5f, pos, RA_Text_defaultRender);
 }
 
 RA_Text RA_Text_create(char *full_text, Vector2 pos) {
@@ -830,13 +868,26 @@ RA_Text RA_Text_create(char *full_text, Vector2 pos) {
 void RA_Text_defaultRender(void *self) {
   RA_Text *text = (RA_Text *)self;
 
+  Font font = font_list.fonts[text->font_idx];
   char display_text[text->display_char_count];
 
   strncpy(display_text, text->full_text, text->display_char_count - 1);
   display_text[text->display_char_count - 1] = '\0';
 
-  DrawTextEx(
-      text->font, display_text, text->base.position, text->font_size, text->spacing, text->tint);
+  DrawTextEx(font, display_text, text->base.position, text->font_size, text->spacing, text->tint);
+}
+
+void RA_Text_setFont(RA_Text *text, char *font_path) {
+  Font font = LoadFont(font_path);
+  RA_FontList_push(&font_list, font);
+  text->font_idx = font_list.count - 1;
+}
+
+void RA_Text_setFontEx(
+    RA_Text *text, char *font_path, int font_size, int *codepoints, int codepoint_count) {
+  Font font = LoadFontEx(font_path, font_size, codepoints, codepoint_count);
+  RA_FontList_push(&font_list, font);
+  text->font_idx = font_list.count - 1;
 }
 
 void RA_TextAnimation_init(RA_Animation *anim,
