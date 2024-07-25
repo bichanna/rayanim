@@ -329,7 +329,7 @@ void RA_Circle_init(RA_Circle *circle,
                     void (*render)(void *)) {
   RA_Object_init(&circle->base, center, render);
   circle->radius = radius;
-  circle->_angle = 0.0f;
+  circle->angle = 0.0f;
   circle->outline_thickness = outline_thickness;
   circle->segments = segments;
   circle->inner_color = inner_color;
@@ -355,7 +355,7 @@ void RA_Circle_defaultRender(void *self) {
            inner_radius,
            outer_radius,
            0.0f,
-           circle->_angle,
+           circle->angle,
            circle->segments,
            circle->outline_color);
 }
@@ -368,14 +368,14 @@ void RA_Circle_fillInnerRender(void *self) {
   DrawCircleSector(circle->base.position,
                    circle->radius + half_thickness,
                    0.0f,
-                   circle->_angle,
+                   circle->angle,
                    circle->segments,
                    circle->outline_color);
 
   DrawCircleSector(circle->base.position,
                    circle->radius - half_thickness,
                    0.0f,
-                   circle->_angle,
+                   circle->angle,
                    circle->segments,
                    circle->inner_color);
 }
@@ -407,7 +407,7 @@ RA_Animation RA_CircleAnimation_create(RA_Circle *circle) {
 void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
   RA_Animation *anim = (RA_Animation *)self;
   RA_Circle *circle = (RA_Circle *)anim->object;
-  circle->_angle = time * 360.0f;
+  circle->angle = time * 360.0f;
 }
 
 // --------------- RA_Circle ---------------

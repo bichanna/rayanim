@@ -114,11 +114,12 @@ void recordScene(RA_Scene *scene);
 typedef struct RA_Circle {
   RA_Object base;
   float radius;
-  float _angle;
   float outline_thickness;
   int segments;
   Color inner_color;
   Color outline_color;
+
+  float angle;
 } RA_Circle;
 
 void RA_Circle_init(RA_Circle *circle,
