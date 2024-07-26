@@ -13,6 +13,7 @@ typedef struct RA_Scene RA_Scene;
 typedef struct RA_Object {
   uint32_t _id;
   Vector2 position;
+  Color color;
 
   void (*render)(void *);
 } RA_Object;
@@ -90,7 +91,7 @@ void RA_FontList_push(RA_FontList *font_list, Font new_font);
 void RA_FontList_unloadAll(RA_FontList *font_list);
 void RA_FontList_destroy(RA_FontList *font_list);
 
-void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *));
+void RA_Object_init(RA_Object *obj, Vector2 position, Color color, void (*render)(void *));
 void RA_Object_initEmpty(RA_Object *obj);
 void RA_Object_emptyRender(void *self);
 
@@ -127,7 +128,6 @@ typedef struct RA_Circle {
   float radius;
   float outline_thickness;
   int segments;
-  Color inner_color;
   Color outline_color;
 
   float angle;
@@ -163,7 +163,6 @@ typedef struct RA_Rectangle {
   float width;
   float height;
   float outline_thickness;
-  Color inner_color;
   Color outline_color;
 
   float fst_quarter;
@@ -281,7 +280,6 @@ void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene);
 typedef struct RA_Text {
   RA_Object base;
   uint32_t font_idx;
-  Color tint;
   float spacing;
   float font_size;
   char *full_text;
@@ -321,8 +319,6 @@ typedef struct RA_Image {
   uint32_t texture_idx;
   char *image_path;
   float scale;
-  uint8_t alpha;
-  Color tint;
 } RA_Image;
 
 void RA_Image_init(RA_Image *image,

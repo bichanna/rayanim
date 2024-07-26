@@ -8,7 +8,7 @@ int main(void) {
   RA_Animation wait1sec = RA_WaitAnimation_create(1.0f);
 
   RA_Circle circle1 = RA_Circle_create((Vector2){800, 500}, 200);
-  circle1.inner_color = GRAY;
+  circle1.base.color = GRAY;
   circle1.outline_color = DARKGRAY;
   circle1.outline_thickness = 60.0f;
   RA_Animation circle1_anim = RA_CircleAnimation_create(&circle1);
@@ -44,7 +44,7 @@ int main(void) {
 
   RA_Rectangle square1 = RA_Square_create((Vector2){2000, 1000}, 200);
   square1.outline_color = RED;
-  square1.inner_color = RED;
+  square1.base.color = RED;
   square1.base.render = RA_Rectangle_fillInnerRender;
   RA_Animation square1_anim = RA_RectangleAnimation_create(&square1);
 

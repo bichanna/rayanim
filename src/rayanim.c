@@ -188,14 +188,15 @@ void RA_FontList_destroy(RA_FontList *font_list) {
   free(font_list);
 }
 
-void RA_Object_init(RA_Object *obj, Vector2 position, void (*render)(void *)) {
+void RA_Object_init(RA_Object *obj, Vector2 position, Color color, void (*render)(void *)) {
   obj->_id = ++object_id;
   obj->position = position;
   obj->render = render;
+  obj->color = color;
 }
 
 void RA_Object_initEmpty(RA_Object *obj) {
-  RA_Object_init(obj, (Vector2){0, 0}, RA_Object_emptyRender);
+  RA_Object_init(obj, (Vector2){0, 0}, (Color){0, 0, 0, 0}, RA_Object_emptyRender);
 }
 
 void RA_Object_emptyRender(void *self) {
@@ -361,12 +362,11 @@ void RA_Circle_init(RA_Circle *circle,
                     Color inner_color,
                     Color outline_color,
                     void (*render)(void *)) {
-  RA_Object_init(&circle->base, center, render);
+  RA_Object_init(&circle->base, center, inner_color, render);
   circle->radius = radius;
   circle->angle = 0.0f;
   circle->outline_thickness = outline_thickness;
   circle->segments = segments;
-  circle->inner_color = inner_color;
   circle->outline_color = outline_color;
 }
 
@@ -411,7 +411,7 @@ void RA_Circle_fillInnerRender(void *self) {
                    0.0f,
                    circle->angle,
                    circle->segments,
-                   circle->inner_color);
+                   circle->base.color);
 }
 
 void RA_CircleAnimation_init(RA_Animation *anim,
@@ -456,11 +456,10 @@ void RA_Rectangle_init(RA_Rectangle *rect,
                        Color inner_color,
                        Color outline_color,
                        void (*render)(void *)) {
-  RA_Object_init(&rect->base, position, render);
+  RA_Object_init(&rect->base, position, inner_color, render);
   rect->width = width;
   rect->height = height;
   rect->outline_thickness = outline_thickness;
-  rect->inner_color = inner_color;
   rect->outline_color = outline_color;
 
   rect->fst_quarter = 0.0f;
@@ -543,7 +542,7 @@ void RA_Rectangle_fillInnerRender(void *self) {
   DrawTriangle((Vector2){x + thickness, y + thickness},
                (Vector2){x + width - thickness, y + (height - thickness) * snd_quarter},
                (Vector2){x + width - thickness, y + thickness},
-               rect->inner_color);
+               rect->base.color);
 
   DrawLineEx(
       (Vector2){x + width, y + height - half_thickness},
@@ -554,7 +553,7 @@ void RA_Rectangle_fillInnerRender(void *self) {
   DrawTriangle((Vector2){x + thickness, y + thickness},
                (Vector2){(x + width) - (width - thickness) * thrd_quarter, y + height - thickness},
                (Vector2){x + width - thickness, y + height - thickness},
-               rect->inner_color);
+               rect->base.color);
 
   DrawLineEx((Vector2){x + half_thickness, y + height},
              (Vector2){x + half_thickness, (y + height) - (height - thickness) * last_quarter},
@@ -840,8 +839,7 @@ void RA_Text_init(RA_Text *text,
                   float spacing,
                   Vector2 pos,
                   void (*render)(void *)) {
-  RA_Object_init(&text->base, pos, render);
-  text->tint = tint;
+  RA_Object_init(&text->base, pos, tint, render);
   text->spacing = spacing;
   text->font_size = font_size;
   text->full_text = full_text;
@@ -869,12 +867,13 @@ void RA_Text_defaultRender(void *self) {
   RA_Text *text = (RA_Text *)self;
 
   Font font = font_list.fonts[text->font_idx];
+  Color tint = text->base.color;
   char display_text[text->display_char_count];
 
   strncpy(display_text, text->full_text, text->display_char_count - 1);
   display_text[text->display_char_count - 1] = '\0';
 
-  DrawTextEx(font, display_text, text->base.position, text->font_size, text->spacing, text->tint);
+  DrawTextEx(font, display_text, text->base.position, text->font_size, text->spacing, tint);
 }
 
 void RA_Text_setFont(RA_Text *text, char *font_path) {
@@ -933,11 +932,9 @@ void RA_Image_init(RA_Image *image,
                    float scale,
                    Color tint,
                    void (*render)(void *)) {
-  RA_Object_init(&image->base, pos, render);
+  RA_Object_init(&image->base, pos, tint, render);
   image->image_path = image_path;
   image->scale = scale;
-  image->alpha = 0;
-  image->tint = tint;
 
   Texture raylib_Texture = LoadTexture(image_path);
   RA_TextureList_push(&texture_list, raylib_Texture);
@@ -958,7 +955,7 @@ RA_Image RA_Image_create(char *image_path, Vector2 pos) {
 void RA_Image_defaultRender(void *self) {
   RA_Image *image = (RA_Image *)self;
   Texture texture = texture_list.textures[image->texture_idx];
-  Color tint = {image->tint.r, image->tint.g, image->tint.b, image->alpha};
+  Color tint = image->base.color;
   DrawTextureEx(texture, image->base.position, 0.0f, image->scale, tint);
 }
 
@@ -988,8 +985,8 @@ RA_Animation RA_ImageAnimation_create(RA_Image *Texture) {
 
 void RA_ImageAnimation_defaultInterpolate(void *self, float time) {
   RA_Animation *anim = (RA_Animation *)self;
-  RA_Image *Texture = (RA_Image *)anim->object;
-  Texture->alpha = (uint8_t)(255 * time);
+  RA_Image *image = (RA_Image *)anim->object;
+  image->base.color.a = (uint8_t)(UINT8_MAX * time);
 }
 
 // --------------- RA_Image ----------------
