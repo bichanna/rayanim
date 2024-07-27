@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static Textures textures;
-static Fonts fonts;
 static uint32_t objectId = 0;
 static uint32_t animationId = 0;
 
@@ -133,60 +131,6 @@ void destroyAnimations(Animations *anims) {
   free(anims->animations);
 }
 
-void initTextures(Textures *textures) {
-  textures->count = 0;
-  textures->capacity = DA_INIT_SIZE;
-  textures->textures = malloc(DA_INIT_SIZE * sizeof(Texture));
-  assert(textures->textures != NULL);
-}
-
-void pushToTextures(Textures *textures, Texture newTexture) {
-  assert(textures != NULL);
-
-  if (textures->count == textures->capacity) {
-    textures->capacity *= 2;
-    assert(realloc(textures->textures, textures->capacity * sizeof(Texture)) != NULL);
-  }
-
-  textures->textures[textures->count] = newTexture;
-  textures->count++;
-}
-
-void unloadAllTextures(Textures *textures) {
-  for (uint32_t i = 0; i < textures->count; i++) UnloadTexture(textures->textures[i]);
-}
-
-void destroyTextures(Textures *textures) {
-  free(textures->textures);
-}
-
-void initFonts(Fonts *fonts) {
-  fonts->count = 0;
-  fonts->capacity = DA_INIT_SIZE;
-  fonts->fonts = malloc(DA_INIT_SIZE * sizeof(Font));
-  assert(fonts->fonts != NULL);
-}
-
-void pushToFonts(Fonts *fonts, Font newFont) {
-  assert(fonts != NULL);
-
-  if (fonts->count == fonts->capacity) {
-    fonts->capacity *= 2;
-    assert(realloc(fonts->fonts, fonts->capacity * sizeof(Font)) != NULL);
-  }
-
-  fonts->fonts[fonts->count] = newFont;
-  fonts->count++;
-}
-
-void unloadAllFonts(Fonts *fonts) {
-  for (uint32_t i = 0; i < fonts->count; i++) UnloadFont(fonts->fonts[i]);
-}
-
-void destroyFonts(Fonts *fonts) {
-  free(fonts);
-}
-
 void initRAObject(RAObject *obj, Vector2 position, Color color, void (*render)(void *)) {
   obj->_id = ++objectId;
   obj->position = position;
@@ -253,10 +197,8 @@ void initScene(Scene *scene, const char *title, int width, int height, Color col
   scene->height = height;
   scene->title = title;
 
-  initTextures(&textures);
-  initFonts(&fonts);
-
-  pushToFonts(&fonts, GetFontDefault());
+  fonts[0] = GetFontDefault();
+  fontCount = 1;
 
   initRAObjects(&scene->objects);
   initAnimations(&scene->animations);
@@ -314,11 +256,9 @@ void destroyScene(Scene *scene) {
   destroyAnimations(&scene->animations);
   scene = NULL;
 
-  unloadAllTextures(&textures);
-  destroyTextures(&textures);
+  for (int i = 0; i < textureCount; i++) UnloadTexture(textures[i]);
 
-  unloadAllFonts(&fonts);
-  destroyFonts(&fonts);
+  for (int i = 0; i < fontCount; i++) UnloadFont(fonts[i]);
 }
 
 void startScene(Scene *scene) {
@@ -816,7 +756,7 @@ void pushToObjectsDefaultMoveAnimation(Scene *scene) {
 
 void initText(RAText *text,
               char *fullText,
-              char *textureIdx,
+              FontIndex fontIdx,
               Color tint,
               float charRevealTime,
               float fontSize,
@@ -829,16 +769,11 @@ void initText(RAText *text,
   text->fullText = fullText;
   text->displayCharCount = 0;
   text->charRevealTime = charRevealTime;
-
-  if (textureIdx != NULL) {
-    setFontForText(text, textureIdx);
-  } else {
-    text->fontIdx = 0;
-  }
+  text->fontIdx = fontIdx;
 }
 
 void initDefaultText(RAText *text, char *fullText, Vector2 pos) {
-  initText(text, fullText, NULL, BLACK, 0.03f, 100, 12.5f, pos, renderDefaultText);
+  initText(text, fullText, 0, BLACK, 0.03f, 100, 12.5f, pos, renderDefaultText);
 }
 
 RAText createText(char *fullText, Vector2 pos) {
@@ -850,7 +785,7 @@ RAText createText(char *fullText, Vector2 pos) {
 void renderDefaultText(void *self) {
   RAText *text = (RAText *)self;
 
-  Font font = fonts.fonts[text->fontIdx];
+  Font font = fonts[text->fontIdx];
   Color tint = text->base.color;
   char displayText[text->displayCharCount];
 
@@ -860,17 +795,15 @@ void renderDefaultText(void *self) {
   DrawTextEx(font, displayText, text->base.position, text->fontSize, text->spacing, tint);
 }
 
-void setFontForText(RAText *text, char *textureIdx) {
-  Font font = LoadFont(textureIdx);
-  pushToFonts(&fonts, font);
-  text->fontIdx = fonts.count - 1;
+void setFontForText(RAText *text, char *filename) {
+  fonts[fontCount++] = LoadFont(filename);
+  text->fontIdx = fontCount - 1;
 }
 
 void setFontForTextEx(
-    RAText *text, char *textureIdx, int fontSize, int *codepoints, int codepointCount) {
-  Font font = LoadFontEx(textureIdx, fontSize, codepoints, codepointCount);
-  pushToFonts(&fonts, font);
-  text->fontIdx = fonts.count - 1;
+    RAText *text, char *filename, int fontSize, int *codepoints, int codepointCount) {
+  fonts[fontCount++] = LoadFontEx(filename, fontSize, codepoints, codepointCount);
+  text->fontIdx = fontCount - 1;
 }
 
 void initTextAnimation(Animation *anim,
@@ -916,10 +849,8 @@ void initImage(
   image->filename = filename;
   image->scale = scale;
 
-  Texture raylib_Texture = LoadTexture(filename);
-  pushToTextures(&textures, raylib_Texture);
-
-  image->textureIdx = textures.count - 1;
+  textures[textureCount++] = LoadTexture(filename);
+  image->textureIdx = textureCount - 1;
 }
 
 void initDefaultImage(RAImage *Texture, char *filename, Vector2 pos) {
@@ -934,8 +865,9 @@ RAImage createImage(char *filename, Vector2 pos) {
 
 void renderDefaultImage(void *self) {
   RAImage *image = (RAImage *)self;
-  Texture texture = textures.textures[image->textureIdx];
+  Texture texture = textures[image->textureIdx];
   Color tint = image->base.color;
+
   DrawTextureEx(texture, image->base.position, 0.0f, image->scale, tint);
 }
 

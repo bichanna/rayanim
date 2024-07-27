@@ -10,6 +10,15 @@
 
 typedef struct Scene Scene;
 
+typedef int FontIndex;
+typedef int TextureIndex;
+
+Texture textures[255];
+int textureCount = 0;
+
+Font fonts[255];
+int fontCount = 0;
+
 typedef struct RAObject {
   uint32_t _id;
   Vector2 position;
@@ -52,18 +61,6 @@ struct Scene {
   int height;
 };
 
-typedef struct Textures {
-  Texture *textures;
-  uint32_t count;
-  uint32_t capacity;
-} Textures;
-
-typedef struct Fonts {
-  Font *fonts;
-  uint32_t count;
-  uint32_t capacity;
-} Fonts;
-
 void initRAObjects(RAObjects *objects);
 void pushToRAObjects(RAObjects *objects, RAObject *newObj);
 RAObject *popFromRAObjects(RAObjects *objects);
@@ -80,16 +77,6 @@ Animation *getFromAnimations(Animations *anims, uint32_t idx);
 void setToAnimations(Animations *anims, uint32_t idx, Animation *newAnim);
 bool containsInAnimations(Animations *anims, Animation *anim);
 void destroyAnimations(Animations *anims);
-
-void initTextures(Textures *textures);
-void pushToTextures(Textures *textures, Texture newTexture);
-void unloadAllTextures(Textures *textures);
-void destroyTextures(Textures *textures);
-
-void initFonts(Fonts *fonts);
-void pushToFonts(Fonts *fonts, Font newFont);
-void unloadAllFonts(Fonts *fonts);
-void destroyFonts(Fonts *fonts);
 
 void initRAObject(RAObject *obj, Vector2 position, Color color, void (*render)(void *));
 void initEmptyRAObject(RAObject *obj);
@@ -277,7 +264,7 @@ void pushToObjectsDefaultMoveAnimation(Scene *scene);
 
 typedef struct RAText {
   RAObject base;
-  uint32_t fontIdx;
+  FontIndex fontIdx;
   float spacing;
   float fontSize;
   char *fullText;
@@ -287,7 +274,7 @@ typedef struct RAText {
 
 void initText(RAText *text,
               char *fullText,
-              char *filename,
+              FontIndex fontIdx,
               Color tint,
               float charRevealTime,
               float fontSize,
@@ -315,7 +302,7 @@ void interpolateDefaultTextAnimation(void *self, float time);
 
 typedef struct RAImage {
   RAObject base;
-  uint32_t textureIdx;
+  TextureIndex textureIdx;
   char *filename;
   float scale;
 } RAImage;
