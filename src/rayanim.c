@@ -6,987 +6,962 @@
 #include <stdlib.h>
 #include <string.h>
 
-static RA_TextureList texture_list;
-static RA_FontList font_list;
-static uint32_t object_id = 0;
-static uint32_t animation_id = 0;
+static Textures textures;
+static Fonts fonts;
+static uint32_t objectId = 0;
+static uint32_t animationId = 0;
 
-void RA_ObjectList_init(RA_ObjectList *obj_list) {
-  obj_list->count = 0;
-  obj_list->capacity = DA_INIT_SIZE;
-  obj_list->objects = malloc(DA_INIT_SIZE * sizeof(RA_Object *));
-  assert(obj_list->objects != NULL);
+void initRAObjects(RAObjects *objects) {
+  objects->count = 0;
+  objects->capacity = DA_INIT_SIZE;
+  objects->objects = malloc(DA_INIT_SIZE * sizeof(RAObject *));
+  assert(objects->objects != NULL);
 }
 
-void RA_ObjectList_push(RA_ObjectList *obj_list, RA_Object *new_obj) {
-  assert(obj_list != NULL);
+void pushToRAObjects(RAObjects *objects, RAObject *newObj) {
+  assert(objects != NULL);
 
-  if (obj_list->count == obj_list->capacity) {
-    obj_list->capacity *= 2;
-    assert(realloc(obj_list->objects, obj_list->capacity * sizeof(RA_Object *)) != NULL);
+  if (objects->count == objects->capacity) {
+    objects->capacity *= 2;
+    assert(realloc(objects->objects, objects->capacity * sizeof(RAObject *)) != NULL);
   }
 
-  obj_list->objects[obj_list->count] = new_obj;
-  obj_list->count++;
+  objects->objects[objects->count] = newObj;
+  objects->count++;
 }
 
-RA_Object *RA_ObjectList_pop(RA_ObjectList *obj_list) {
-  assert(obj_list != NULL);
+RAObject *popFromRAObjects(RAObjects *objects) {
+  assert(objects != NULL);
 
-  if (obj_list->count == 0) return NULL;
+  if (objects->count == 0) return NULL;
 
-  return obj_list->objects[--obj_list->count];
+  return objects->objects[--objects->count];
 }
 
-RA_Object *RA_ObjectList_getAt(RA_ObjectList *obj_list, uint32_t idx) {
-  assert(obj_list != NULL);
+RAObject *getFromRAObjects(RAObjects *objects, uint32_t idx) {
+  assert(objects != NULL);
 
-  if (obj_list->count <= idx) return NULL;
+  if (objects->count <= idx) return NULL;
 
-  return obj_list->objects[idx];
+  return objects->objects[idx];
 }
 
-void RA_ObjectList_set(RA_ObjectList *obj_list, uint32_t idx, RA_Object *new_obj) {
-  assert(obj_list != NULL);
+void setToRAObjects(RAObjects *objects, uint32_t idx, RAObject *newObj) {
+  assert(objects != NULL);
 
-  if (obj_list->count <= idx) return;
+  if (objects->count <= idx) return;
 
-  obj_list->objects[idx] = new_obj;
+  objects->objects[idx] = newObj;
 }
 
-bool RA_ObjectList_contains(RA_ObjectList *obj_list, RA_Object *obj) {
-  for (uint32_t i = 0; i < obj_list->count; i++)
-    if (obj_list->objects[i]->_id == obj->_id) return true;
+bool containsInRAObjects(RAObjects *objects, RAObject *obj) {
+  for (uint32_t i = 0; i < objects->count; i++)
+    if (objects->objects[i]->_id == obj->_id) return true;
 
   return false;
 }
 
-void RA_ObjectList_destroy(RA_ObjectList *obj_list) {
-  free(obj_list->objects);
+void destroyRAObjects(RAObjects *objects) {
+  free(objects->objects);
 }
 
-void RA_AnimationList_init(RA_AnimationList *anim_list) {
-  anim_list->count = 0;
-  anim_list->capacity = DA_INIT_SIZE;
-  anim_list->animations = malloc(DA_INIT_SIZE * sizeof(RA_Animation *));
-  assert(anim_list->animations != NULL);
+void initAnimations(Animations *anims) {
+  anims->count = 0;
+  anims->capacity = DA_INIT_SIZE;
+  anims->animations = malloc(DA_INIT_SIZE * sizeof(Animation *));
+  assert(anims->animations != NULL);
 }
 
-void RA_AnimationList_push(RA_AnimationList *anim_list, RA_Animation *new_anim) {
-  assert(anim_list != NULL);
+void pushToAnimations(Animations *anims, Animation *newAnim) {
+  assert(anims != NULL);
 
-  if (anim_list->count == anim_list->capacity) {
-    anim_list->capacity *= 2;
-    assert(realloc(anim_list->animations, anim_list->capacity * sizeof(RA_Animation *)) != NULL);
+  if (anims->count == anims->capacity) {
+    anims->capacity *= 2;
+    assert(realloc(anims->animations, anims->capacity * sizeof(Animation *)) != NULL);
   }
 
-  anim_list->animations[anim_list->count] = new_anim;
-  anim_list->count++;
+  anims->animations[anims->count] = newAnim;
+  anims->count++;
 }
 
-RA_Animation *RA_AnimationList_pop(RA_AnimationList *anim_list) {
-  assert(anim_list != NULL);
+Animation *popFromAnimations(Animations *anims) {
+  assert(anims != NULL);
 
-  if (anim_list->count == 0) return NULL;
+  if (anims->count == 0) return NULL;
 
-  return anim_list->animations[--anim_list->count];
+  return anims->animations[--anims->count];
 }
 
-RA_Animation *RA_AnimationList_popFirst(RA_AnimationList *anim_list) {
-  assert(anim_list != NULL);
+Animation *popFirstFromAnimations(Animations *anims) {
+  assert(anims != NULL);
 
-  if (anim_list->count == 0) return NULL;
+  if (anims->count == 0) return NULL;
 
-  RA_Animation *first_anim = anim_list->animations[0];
+  Animation *firstAnim = anims->animations[0];
 
-  for (uint32_t i = 1; i < anim_list->count; i++)
-    anim_list->animations[i - 1] = anim_list->animations[i];
+  for (uint32_t i = 1; i < anims->count; i++) anims->animations[i - 1] = anims->animations[i];
 
-  anim_list->count--;
+  anims->count--;
 
-  return first_anim;
+  return firstAnim;
 }
 
-RA_Animation *RA_AnimationList_getAt(RA_AnimationList *anim_list, uint32_t idx) {
-  assert(anim_list != NULL);
+Animation *getFromAnimations(Animations *anims, uint32_t idx) {
+  assert(anims != NULL);
 
-  if (anim_list->count <= idx) return NULL;
+  if (anims->count <= idx) return NULL;
 
-  return anim_list->animations[idx];
+  return anims->animations[idx];
 }
 
-void RA_AnimationList_set(RA_AnimationList *anim_list, uint32_t idx, RA_Animation *new_anim) {
-  assert(anim_list != NULL);
+void setToAnimations(Animations *anims, uint32_t idx, Animation *newAnim) {
+  assert(anims != NULL);
 
-  if (anim_list->count <= idx) return;
+  if (anims->count <= idx) return;
 
-  anim_list->animations[idx] = new_anim;
+  anims->animations[idx] = newAnim;
 }
 
-bool RA_AnimationList_contains(RA_AnimationList *anim_list, RA_Animation *anim) {
-  for (uint32_t i = 0; i < anim_list->count; i++)
-    if (anim_list->animations[i]->_id == anim->_id) return true;
+bool containsInAnimations(Animations *anims, Animation *anim) {
+  for (uint32_t i = 0; i < anims->count; i++)
+    if (anims->animations[i]->_id == anim->_id) return true;
 
   return false;
 }
 
-void RA_AnimationList_destroy(RA_AnimationList *anim_list) {
-  free(anim_list->animations);
+void destroyAnimations(Animations *anims) {
+  free(anims->animations);
 }
 
-void RA_TextureList_init(RA_TextureList *texture_list) {
-  texture_list->count = 0;
-  texture_list->capacity = DA_INIT_SIZE;
-  texture_list->textures = malloc(DA_INIT_SIZE * sizeof(Texture));
-  assert(texture_list->textures != NULL);
+void initTextures(Textures *textures) {
+  textures->count = 0;
+  textures->capacity = DA_INIT_SIZE;
+  textures->textures = malloc(DA_INIT_SIZE * sizeof(Texture));
+  assert(textures->textures != NULL);
 }
 
-void RA_TextureList_push(RA_TextureList *texture_list, Texture new_texture) {
-  assert(texture_list != NULL);
+void pushToTextures(Textures *textures, Texture newTexture) {
+  assert(textures != NULL);
 
-  if (texture_list->count == texture_list->capacity) {
-    texture_list->capacity *= 2;
-    assert(realloc(texture_list->textures, texture_list->capacity * sizeof(Texture)) != NULL);
+  if (textures->count == textures->capacity) {
+    textures->capacity *= 2;
+    assert(realloc(textures->textures, textures->capacity * sizeof(Texture)) != NULL);
   }
 
-  texture_list->textures[texture_list->count] = new_texture;
-  texture_list->count++;
+  textures->textures[textures->count] = newTexture;
+  textures->count++;
 }
 
-void RA_TextureList_unloadAll(RA_TextureList *texture_list) {
-  for (uint32_t i = 0; i < texture_list->count; i++) UnloadTexture(texture_list->textures[i]);
+void unloadAllTextures(Textures *textures) {
+  for (uint32_t i = 0; i < textures->count; i++) UnloadTexture(textures->textures[i]);
 }
 
-void RA_TextureList_destroy(RA_TextureList *texture_list) {
-  free(texture_list->textures);
+void destroyTextures(Textures *textures) {
+  free(textures->textures);
 }
 
-void RA_FontList_init(RA_FontList *font_list) {
-  font_list->count = 0;
-  font_list->capacity = DA_INIT_SIZE;
-  font_list->fonts = malloc(DA_INIT_SIZE * sizeof(Font));
-  assert(font_list->fonts != NULL);
+void initFonts(Fonts *fonts) {
+  fonts->count = 0;
+  fonts->capacity = DA_INIT_SIZE;
+  fonts->fonts = malloc(DA_INIT_SIZE * sizeof(Font));
+  assert(fonts->fonts != NULL);
 }
 
-void RA_FontList_push(RA_FontList *font_list, Font new_font) {
-  assert(font_list != NULL);
+void pushToFonts(Fonts *fonts, Font newFont) {
+  assert(fonts != NULL);
 
-  if (font_list->count == font_list->capacity) {
-    font_list->capacity *= 2;
-    assert(realloc(font_list->fonts, font_list->capacity * sizeof(Font)) != NULL);
+  if (fonts->count == fonts->capacity) {
+    fonts->capacity *= 2;
+    assert(realloc(fonts->fonts, fonts->capacity * sizeof(Font)) != NULL);
   }
 
-  font_list->fonts[font_list->count] = new_font;
-  font_list->count++;
+  fonts->fonts[fonts->count] = newFont;
+  fonts->count++;
 }
 
-void RA_FontList_unloadAll(RA_FontList *font_list) {
-  for (uint32_t i = 0; i < font_list->count; i++) UnloadFont(font_list->fonts[i]);
+void unloadAllFonts(Fonts *fonts) {
+  for (uint32_t i = 0; i < fonts->count; i++) UnloadFont(fonts->fonts[i]);
 }
 
-void RA_FontList_destroy(RA_FontList *font_list) {
-  free(font_list);
+void destroyFonts(Fonts *fonts) {
+  free(fonts);
 }
 
-void RA_Object_init(RA_Object *obj, Vector2 position, Color color, void (*render)(void *)) {
-  obj->_id = ++object_id;
+void initRAObject(RAObject *obj, Vector2 position, Color color, void (*render)(void *)) {
+  obj->_id = ++objectId;
   obj->position = position;
   obj->render = render;
   obj->color = color;
 }
 
-void RA_Object_initEmpty(RA_Object *obj) {
-  RA_Object_init(obj, (Vector2){0, 0}, (Color){0, 0, 0, 0}, RA_Object_emptyRender);
+void initEmptyRAObject(RAObject *obj) {
+  initRAObject(obj, (Vector2){0, 0}, (Color){0, 0, 0, 0}, renderEmptyRAObject);
 }
 
-void RA_Object_emptyRender(void *self) {
+void renderEmptyRAObject(void *self) {
   (void)self;
 }
 
-void RA_Animation_init(RA_Animation *anim,
-                       RA_Object *obj,
-                       float duration,
-                       bool (*update)(void *, float),
-                       void (*interpolate)(void *, float),
-                       void (*push_to_object_list)(RA_Scene *)) {
-  anim->_id = ++animation_id;
+void initAnimation(Animation *anim,
+                   RAObject *obj,
+                   float duration,
+                   bool (*update)(void *, float),
+                   void (*interpolate)(void *, float),
+                   void (*pushToObjects)(Scene *)) {
+  anim->_id = ++animationId;
   anim->object = obj;
   anim->duration = duration;
-  anim->elapsed_time = 0.0f;
+  anim->elapsedTime = 0.0f;
   anim->done = false;
   anim->update = update;
   anim->interpolate = interpolate;
-  anim->push_to_object_list = push_to_object_list;
+  anim->pushToObjects = pushToObjects;
 }
 
-void RA_Animation_defaultInit(RA_Animation *anim,
-                              RA_Object *obj,
-                              float duration,
-                              void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim,
-                    obj,
-                    duration,
-                    RA_Animation_defaultUpdate,
-                    interpolate,
-                    RA_Animation_defaultPushToObjectList);
+void initDefaultAnimation(Animation *anim,
+                          RAObject *obj,
+                          float duration,
+                          void (*interpolate)(void *, float)) {
+  initAnimation(
+      anim, obj, duration, updateDefaultAnimation, interpolate, pushToObjectsDefaultAnimation);
 }
 
-bool RA_Animation_defaultUpdate(void *self, float dt) {
-  RA_Animation *anim = (RA_Animation *)self;
+bool updateDefaultAnimation(void *self, float dt) {
+  Animation *anim = (Animation *)self;
 
   if (anim->done) return true;
 
-  anim->elapsed_time += dt;
-  anim->interpolate(anim, fminf(anim->elapsed_time / anim->duration, 1.0f));
+  anim->elapsedTime += dt;
+  anim->interpolate(anim, fminf(anim->elapsedTime / anim->duration, 1.0f));
 
-  bool completed = anim->elapsed_time >= anim->duration;
+  bool completed = anim->elapsedTime >= anim->duration;
   if (completed) anim->done = true;
 
   return completed;
 }
 
-void RA_Animation_defaultPushToObjectList(RA_Scene *scene) {
-  RA_Object *current_obj = scene->current_animation->object;
-  TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->current_animation->_id);
-  RA_ObjectList_push(&scene->object_list, current_obj);
+void pushToObjectsDefaultAnimation(Scene *scene) {
+  RAObject *currentObj = scene->currentAnimation->object;
+  TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->currentAnimation->_id);
+  pushToRAObjects(&scene->objects, currentObj);
 }
 
-void RA_Scene_init(RA_Scene *scene, const char *title, int width, int height, Color color) {
-  scene->current_animation = NULL;
+void initScene(Scene *scene, const char *title, int width, int height, Color color) {
+  scene->currentAnimation = NULL;
   scene->color = color;
   scene->width = width;
   scene->height = height;
   scene->title = title;
 
-  RA_TextureList_init(&texture_list);
-  RA_FontList_init(&font_list);
+  initTextures(&textures);
+  initFonts(&fonts);
 
-  RA_FontList_push(&font_list, GetFontDefault());
+  pushToFonts(&fonts, GetFontDefault());
 
-  RA_ObjectList_init(&scene->object_list);
-  RA_AnimationList_init(&scene->animation_list);
+  initRAObjects(&scene->objects);
+  initAnimations(&scene->animations);
 
   InitWindow(scene->width, scene->height, scene->title);
 }
 
-void RA_Scene_defaultInit(RA_Scene *scene, const char *title) {
-  RA_Scene_init(scene, title, 2400, 1600, RAYWHITE);
+void initDefaultScene(Scene *scene, const char *title) {
+  initScene(scene, title, 2400, 1600, RAYWHITE);
 }
 
-void RA_Scene_play(RA_Scene *scene, RA_Animation *anim) {
+void playAnimation(Scene *scene, Animation *anim) {
   assert((scene != NULL) && (anim != NULL));
 
-  RA_AnimationList_push(&scene->animation_list, anim);
+  pushToAnimations(&scene->animations, anim);
 }
 
-void RA_Scene_play_these(RA_Scene *scene, RA_Animation **anims, int anim_count) {
-  for (int i = 0; i < anim_count; i++) RA_Scene_play(scene, anims[i]);
+void playAnimations(Scene *scene, Animation **anims, int animCount) {
+  for (int i = 0; i < animCount; i++) playAnimation(scene, anims[i]);
 }
 
-void RA_Scene_render(RA_Scene *scene) {
+void renderScene(Scene *scene) {
   BeginDrawing();
 
   ClearBackground(scene->color);
-  for (uint32_t i = 0; i < scene->object_list.count; i++) {
-    RA_Object *obj = RA_ObjectList_getAt(&scene->object_list, i);
+  for (uint32_t i = 0; i < scene->objects.count; i++) {
+    RAObject *obj = getFromRAObjects(&scene->objects, i);
     if (obj != NULL) obj->render(obj);
   }
 
   EndDrawing();
 }
 
-void RA_Scene_update(RA_Scene *scene, float dt) {
-  if ((scene->current_animation == NULL) && (scene->animation_list.count > 0)) {
-    scene->current_animation = RA_AnimationList_popFirst(&scene->animation_list);
-    scene->current_animation->elapsed_time = 0.0f;
-    scene->current_animation->done = false;
-    scene->current_animation->push_to_object_list(scene);
-    // RA_Object *current_obj = scene->current_animation->object;
-    // TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->current_animation->_id);
-    // // if (!RA_ObjectList_contains(&scene->object_list, current_obj))
-    // RA_ObjectList_push(&scene->object_list, current_obj);
+void updateScene(Scene *scene, float dt) {
+  if ((scene->currentAnimation == NULL) && (scene->animations.count > 0)) {
+    scene->currentAnimation = popFirstFromAnimations(&scene->animations);
+    scene->currentAnimation->elapsedTime = 0.0f;
+    scene->currentAnimation->done = false;
+    scene->currentAnimation->pushToObjects(scene);
+    // RAObject *currentObj = scene->currentAnimation->object;
+    // TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->currentAnimation->_id);
+    // // if (!containsInRAObjects(&scene->objects, currentObj))
+    // pushToRAObjects(&scene->objects, currentObj);
   }
 
-  if ((scene->current_animation != NULL) &&
-      (scene->current_animation->update(scene->current_animation, dt))) {
-    TraceLog(LOG_INFO, "RayAnim: Finished Animation #%i", scene->current_animation->_id);
-    scene->current_animation = NULL;
+  if ((scene->currentAnimation != NULL) &&
+      (scene->currentAnimation->update(scene->currentAnimation, dt))) {
+    TraceLog(LOG_INFO, "RayAnim: Finished Animation #%i", scene->currentAnimation->_id);
+    scene->currentAnimation = NULL;
   }
 }
 
-void RA_Scene_destroy(RA_Scene *scene) {
-  RA_ObjectList_destroy(&scene->object_list);
-  RA_AnimationList_destroy(&scene->animation_list);
+void destroyScene(Scene *scene) {
+  destroyRAObjects(&scene->objects);
+  destroyAnimations(&scene->animations);
   scene = NULL;
 
-  RA_TextureList_unloadAll(&texture_list);
-  RA_TextureList_destroy(&texture_list);
+  unloadAllTextures(&textures);
+  destroyTextures(&textures);
 
-  RA_FontList_unloadAll(&font_list);
-  RA_FontList_destroy(&font_list);
+  unloadAllFonts(&fonts);
+  destroyFonts(&fonts);
 }
 
-void startScene(RA_Scene *scene) {
+void startScene(Scene *scene) {
   SetTargetFPS(120);
 
-  float last_time = GetTime();
+  float lastTime = GetTime();
 
   while (!WindowShouldClose()) {
     if (IsKeyPressed(KEY_Q)) break;
 
-    float current_time = GetTime();
-    float dt = current_time - last_time;
-    last_time = current_time;
+    float currentTime = GetTime();
+    float dt = currentTime - lastTime;
+    lastTime = currentTime;
 
-    RA_Scene_update(scene, dt);
-    RA_Scene_render(scene);
+    updateScene(scene, dt);
+    renderScene(scene);
   }
 
   CloseWindow();
 }
 
-void recordScene(RA_Scene *scene) {
+void recordScene(Scene *scene) {
   // TODO: will be implemented later
   scene = scene;
 }
 
-// ------------------------------ Built-In RA_Objects & RA_Animations ------------------------------
+// ------------------------------ Built-In RAObjects & Animations ------------------------------
 
-// --------------- RA_Circle ---------------
+// --------------- RACircle ---------------
 
-void RA_Circle_init(RA_Circle *circle,
-                    Vector2 center,
-                    float radius,
-                    float outline_thickness,
-                    int segments,
-                    Color inner_color,
-                    Color outline_color,
-                    void (*render)(void *)) {
-  RA_Object_init(&circle->base, center, inner_color, render);
-  circle->radius = radius;
-  circle->angle = 0.0f;
-  circle->outline_thickness = outline_thickness;
-  circle->segments = segments;
-  circle->outline_color = outline_color;
+void initCircle(RACircle *RACircle,
+                Vector2 center,
+                float radius,
+                float outlineThickness,
+                int segments,
+                Color innerColor,
+                Color outlineColor,
+                void (*render)(void *)) {
+  initRAObject(&RACircle->base, center, innerColor, render);
+  RACircle->radius = radius;
+  RACircle->angle = 0.0f;
+  RACircle->outlineThickness = outlineThickness;
+  RACircle->segments = segments;
+  RACircle->outlineColor = outlineColor;
 }
 
-void RA_Circle_defaultInit(RA_Circle *circle, Vector2 center, float radius) {
-  RA_Circle_init(circle, center, radius, 25.0f, 100, BLUE, DARKBLUE, RA_Circle_defaultRender);
+void initDefaultCircle(RACircle *RACircle, Vector2 center, float radius) {
+  initCircle(RACircle, center, radius, 25.0f, 100, BLUE, DARKBLUE, renderDefaultCircle);
 }
 
-RA_Circle RA_Circle_create(Vector2 center, float radius) {
-  RA_Circle circle;
-  RA_Circle_defaultInit(&circle, center, radius);
-  return circle;
+RACircle createCircle(Vector2 center, float radius) {
+  RACircle RACircle;
+  initDefaultCircle(&RACircle, center, radius);
+  return RACircle;
 }
 
-void RA_Circle_defaultRender(void *self) {
-  RA_Circle *circle = (RA_Circle *)self;
+void renderDefaultCircle(void *self) {
+  RACircle *circle = (RACircle *)self;
 
-  float inner_radius = circle->radius - circle->outline_thickness / 2;
-  float outer_radius = circle->radius + circle->outline_thickness / 2;
+  float innerRadius = circle->radius - circle->outlineThickness / 2;
+  float outerRadius = circle->radius + circle->outlineThickness / 2;
   DrawRing(circle->base.position,
-           inner_radius,
-           outer_radius,
+           innerRadius,
+           outerRadius,
            0.0f,
            circle->angle,
            circle->segments,
-           circle->outline_color);
+           circle->outlineColor);
 }
 
-void RA_Circle_fillInnerRender(void *self) {
-  RA_Circle *circle = (RA_Circle *)self;
+void renderFillInnerCircle(void *self) {
+  RACircle *circle = (RACircle *)self;
 
-  float half_thickness = circle->outline_thickness / 2;
+  float halfThickness = circle->outlineThickness / 2;
 
   DrawCircleSector(circle->base.position,
-                   circle->radius + half_thickness,
+                   circle->radius + halfThickness,
                    0.0f,
                    circle->angle,
                    circle->segments,
-                   circle->outline_color);
+                   circle->outlineColor);
 
   DrawCircleSector(circle->base.position,
-                   circle->radius - half_thickness,
+                   circle->radius - halfThickness,
                    0.0f,
                    circle->angle,
                    circle->segments,
                    circle->base.color);
 }
 
-void RA_CircleAnimation_init(RA_Animation *anim,
-                             RA_Circle *circle,
-                             float duration,
-                             bool (*update)(void *, float),
-                             void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim,
-                    (RA_Object *)circle,
-                    duration,
-                    update,
-                    interpolate,
-                    RA_Animation_defaultPushToObjectList);
+void initCircleAnimation(Animation *anim,
+                         RACircle *RACircle,
+                         float duration,
+                         bool (*update)(void *, float),
+                         void (*interpolate)(void *, float)) {
+  initAnimation(
+      anim, (RAObject *)RACircle, duration, update, interpolate, pushToObjectsDefaultAnimation);
 }
 
-void RA_CircleAnimation_defaultInit(RA_Animation *anim, RA_Circle *circle) {
-  RA_CircleAnimation_init(
-      anim, circle, 0.7f, RA_Animation_defaultUpdate, RA_CircleAnimation_defaultInterpolate);
+void initDefaultCircleAnimation(Animation *anim, RACircle *RACircle) {
+  initCircleAnimation(
+      anim, RACircle, 0.8f, updateDefaultAnimation, interpolateDefaultCircleAnimation);
 }
 
-RA_Animation RA_CircleAnimation_create(RA_Circle *circle) {
-  RA_Animation anim;
-  RA_CircleAnimation_defaultInit(&anim, circle);
+Animation createCircleAnimation(RACircle *RACircle) {
+  Animation anim;
+  initDefaultCircleAnimation(&anim, RACircle);
   return anim;
 }
-
-void RA_CircleAnimation_defaultInterpolate(void *self, float time) {
-  RA_Animation *anim = (RA_Animation *)self;
-  RA_Circle *circle = (RA_Circle *)anim->object;
+void interpolateDefaultCircleAnimation(void *self, float time) {
+  Animation *anim = (Animation *)self;
+  RACircle *circle = (RACircle *)anim->object;
   circle->angle = time * 360.0f;
 }
 
-// --------------- RA_Circle ---------------
+// --------------- RACircle ---------------
 
-// ------------- RA_Rectangle --------------
+// ------------- RARectangle --------------
 
-void RA_Rectangle_init(RA_Rectangle *rect,
-                       Vector2 position,
-                       float width,
-                       float height,
-                       float outline_thickness,
-                       Color inner_color,
-                       Color outline_color,
-                       void (*render)(void *)) {
-  RA_Object_init(&rect->base, position, inner_color, render);
+void initRectangle(RARectangle *rect,
+                   Vector2 position,
+                   float width,
+                   float height,
+                   float outlineThickness,
+                   Color innerColor,
+                   Color outlineColor,
+                   void (*render)(void *)) {
+  initRAObject(&rect->base, position, innerColor, render);
   rect->width = width;
   rect->height = height;
-  rect->outline_thickness = outline_thickness;
-  rect->outline_color = outline_color;
+  rect->outlineThickness = outlineThickness;
+  rect->outlineColor = outlineColor;
 
-  rect->fst_quarter = 0.0f;
-  rect->snd_quarter = 0.0f;
-  rect->thrd_quarter = 0.0f;
-  rect->last_quarter = 0.0f;
+  rect->firstQuarter = 0.0f;
+  rect->secondQuarter = 0.0f;
+  rect->thirdQuarter = 0.0f;
+  rect->lastQuarter = 0.0f;
 }
 
-void RA_Rectangle_defaultInit(RA_Rectangle *rect, Vector2 position, float width, float height) {
-  RA_Rectangle_init(
-      rect, position, width, height, 25.0f, GREEN, DARKGREEN, RA_Rectangle_defaultRender);
+void initDefaultRectangle(RARectangle *rect, Vector2 position, float width, float height) {
+  initRectangle(rect, position, width, height, 25.0f, GREEN, DARKGREEN, renderDefaultRectangle);
 }
 
-RA_Rectangle RA_Rectangle_create(Vector2 position, float width, float height) {
-  RA_Rectangle rect;
-  RA_Rectangle_defaultInit(&rect, position, width, height);
+RARectangle createRectangle(Vector2 position, float width, float height) {
+  RARectangle rect;
+  initDefaultRectangle(&rect, position, width, height);
   return rect;
 }
 
-void RA_Rectangle_defaultRender(void *self) {
-  RA_Rectangle *rect = (RA_Rectangle *)self;
+void renderDefaultRectangle(void *self) {
+  RARectangle *rect = (RARectangle *)self;
 
   float x = rect->base.position.x;
   float y = rect->base.position.y;
   float width = rect->width;
   float height = rect->height;
-  float half_thickness = rect->outline_thickness / 2.0f;
-  float thickness = rect->outline_thickness;
-  float fst_quarter = rect->fst_quarter;
-  float snd_quarter = rect->snd_quarter;
-  float thrd_quarter = rect->thrd_quarter;
-  float last_quarter = rect->last_quarter;
+  float halfThickness = rect->outlineThickness / 2.0f;
+  float thickness = rect->outlineThickness;
+  float firstQuarter = rect->firstQuarter;
+  float secondQuarter = rect->secondQuarter;
+  float thirdQuarter = rect->thirdQuarter;
+  float lastQuarter = rect->lastQuarter;
 
-  DrawLineEx((Vector2){x, y + half_thickness},
-             (Vector2){x + (width - thickness) * fst_quarter, y + half_thickness},
+  DrawLineEx((Vector2){x, y + halfThickness},
+             (Vector2){x + (width - thickness) * firstQuarter, y + halfThickness},
              thickness,
-             rect->outline_color);
+             rect->outlineColor);
 
-  DrawLineEx((Vector2){x + width - half_thickness, y},
-             (Vector2){x + width - half_thickness, y + (height - thickness) * snd_quarter},
+  DrawLineEx((Vector2){x + width - halfThickness, y},
+             (Vector2){x + width - halfThickness, y + (height - thickness) * secondQuarter},
              thickness,
-             rect->outline_color);
+             rect->outlineColor);
 
   DrawLineEx(
-      (Vector2){x + width, y + height - half_thickness},
-      (Vector2){(x + width) - (width - thickness) * thrd_quarter, y + height - half_thickness},
+      (Vector2){x + width, y + height - halfThickness},
+      (Vector2){(x + width) - (width - thickness) * thirdQuarter, y + height - halfThickness},
       thickness,
-      rect->outline_color);
+      rect->outlineColor);
 
-  DrawLineEx((Vector2){x + half_thickness, y + height},
-             (Vector2){x + half_thickness, (y + height) - (height - thickness) * last_quarter},
+  DrawLineEx((Vector2){x + halfThickness, y + height},
+             (Vector2){x + halfThickness, (y + height) - (height - thickness) * lastQuarter},
              thickness,
-             rect->outline_color);
+             rect->outlineColor);
 }
 
-void RA_Rectangle_fillInnerRender(void *self) {
-  RA_Rectangle *rect = (RA_Rectangle *)self;
+void renderFillInnerRectangle(void *self) {
+  RARectangle *rect = (RARectangle *)self;
 
   float x = rect->base.position.x;
   float y = rect->base.position.y;
   float width = rect->width;
   float height = rect->height;
-  float half_thickness = rect->outline_thickness / 2.0f;
-  float thickness = rect->outline_thickness;
-  float fst_quarter = rect->fst_quarter;
-  float snd_quarter = rect->snd_quarter;
-  float thrd_quarter = rect->thrd_quarter;
-  float last_quarter = rect->last_quarter;
+  float halfThickness = rect->outlineThickness / 2.0f;
+  float thickness = rect->outlineThickness;
+  float firstQuarter = rect->firstQuarter;
+  float secondQuarter = rect->secondQuarter;
+  float thirdQuarter = rect->thirdQuarter;
+  float lastQuarter = rect->lastQuarter;
 
-  DrawLineEx((Vector2){x, y + half_thickness},
-             (Vector2){x + (width - thickness) * fst_quarter, y + half_thickness},
+  DrawLineEx((Vector2){x, y + halfThickness},
+             (Vector2){x + (width - thickness) * firstQuarter, y + halfThickness},
              thickness,
-             rect->outline_color);
+             rect->outlineColor);
 
-  DrawLineEx((Vector2){x + width - half_thickness, y},
-             (Vector2){x + width - half_thickness, y + (height - thickness) * snd_quarter},
+  DrawLineEx((Vector2){x + width - halfThickness, y},
+             (Vector2){x + width - halfThickness, y + (height - thickness) * secondQuarter},
              thickness,
-             rect->outline_color);
+             rect->outlineColor);
 
   DrawTriangle((Vector2){x + thickness, y + thickness},
-               (Vector2){x + width - thickness, y + (height - thickness) * snd_quarter},
+               (Vector2){x + width - thickness, y + (height - thickness) * secondQuarter},
                (Vector2){x + width - thickness, y + thickness},
                rect->base.color);
 
   DrawLineEx(
-      (Vector2){x + width, y + height - half_thickness},
-      (Vector2){(x + width) - (width - thickness) * thrd_quarter, y + height - half_thickness},
+      (Vector2){x + width, y + height - halfThickness},
+      (Vector2){(x + width) - (width - thickness) * thirdQuarter, y + height - halfThickness},
       thickness,
-      rect->outline_color);
+      rect->outlineColor);
 
   DrawTriangle((Vector2){x + thickness, y + thickness},
-               (Vector2){(x + width) - (width - thickness) * thrd_quarter, y + height - thickness},
+               (Vector2){(x + width) - (width - thickness) * thirdQuarter, y + height - thickness},
                (Vector2){x + width - thickness, y + height - thickness},
                rect->base.color);
 
-  DrawLineEx((Vector2){x + half_thickness, y + height},
-             (Vector2){x + half_thickness, (y + height) - (height - thickness) * last_quarter},
+  DrawLineEx((Vector2){x + halfThickness, y + height},
+             (Vector2){x + halfThickness, (y + height) - (height - thickness) * lastQuarter},
              thickness,
-             rect->outline_color);
+             rect->outlineColor);
 }
 
-void RA_RectangleAnimation_init(RA_Animation *anim,
-                                RA_Rectangle *rect,
-                                float duration,
-                                bool (*update)(void *, float),
-                                void (*interpolate)(void *, float)) {
-  RA_Animation_init(
-      anim, (RA_Object *)rect, duration, update, interpolate, RA_Animation_defaultPushToObjectList);
+void initRectangleAnimation(Animation *anim,
+                            RARectangle *rect,
+                            float duration,
+                            bool (*update)(void *, float),
+                            void (*interpolate)(void *, float)) {
+  initAnimation(
+      anim, (RAObject *)rect, duration, update, interpolate, pushToObjectsDefaultAnimation);
 }
 
-void RA_RectangleAnimation_defaultInit(RA_Animation *anim, RA_Rectangle *rect) {
-  RA_RectangleAnimation_init(
-      anim, rect, 0.7, RA_Animation_defaultUpdate, RA_RectangleAnimation_defaultInterpolate);
+void initDefaultRectangleAnimation(Animation *anim, RARectangle *rect) {
+  initRectangleAnimation(
+      anim, rect, 0.7, updateDefaultAnimation, interpolateDefaultRectangleAnimation);
 }
 
-RA_Animation RA_RectangleAnimation_create(RA_Rectangle *rect) {
-  RA_Animation anim;
-  RA_RectangleAnimation_defaultInit(&anim, rect);
+Animation createRectangleAnimation(RARectangle *rect) {
+  Animation anim;
+  initDefaultRectangleAnimation(&anim, rect);
   return anim;
 }
 
-void RA_RectangleAnimation_defaultInterpolate(void *self, float time) {
+void interpolateDefaultRectangleAnimation(void *self, float time) {
   (void)time;
 
-  RA_Animation *anim = (RA_Animation *)self;
-  RA_Rectangle *rect = (RA_Rectangle *)anim->object;
+  Animation *anim = (Animation *)self;
+  RARectangle *rect = (RARectangle *)anim->object;
 
-  float elapsed_time = anim->elapsed_time;
-  float quarter_duration = anim->duration / 4.0f;
+  float elapsedTime = anim->elapsedTime;
+  float quarterDuration = anim->duration / 4.0f;
 
-  rect->fst_quarter = fminf(elapsed_time / quarter_duration, 1.0f);
+  rect->firstQuarter = fminf(elapsedTime / quarterDuration, 1.0f);
 
-  if ((elapsed_time - quarter_duration) > 0)
-    rect->snd_quarter = fminf((elapsed_time - quarter_duration) / quarter_duration, 1.0f);
+  if ((elapsedTime - quarterDuration) > 0)
+    rect->secondQuarter = fminf((elapsedTime - quarterDuration) / quarterDuration, 1.0f);
 
-  if ((elapsed_time - quarter_duration * 2) > 0)
-    rect->thrd_quarter = fminf((elapsed_time - quarter_duration * 2) / quarter_duration, 1.0f);
+  if ((elapsedTime - quarterDuration * 2) > 0)
+    rect->thirdQuarter = fminf((elapsedTime - quarterDuration * 2) / quarterDuration, 1.0f);
 
-  if ((elapsed_time - quarter_duration * 3) > 0)
-    rect->last_quarter = fminf((elapsed_time - quarter_duration * 3) / quarter_duration, 1.0f);
+  if ((elapsedTime - quarterDuration * 3) > 0)
+    rect->lastQuarter = fminf((elapsedTime - quarterDuration * 3) / quarterDuration, 1.0f);
 }
 
-// ------------- RA_Rectangle --------------
+// ------------- RARectangle --------------
 
-// -------------- RA_Square ----------------
+// -------------- RASquare ----------------
 
-void RA_Square_init(RA_Rectangle *square,
-                    Vector2 position,
-                    float length,
-                    float outline_thickness,
-                    Color inner_color,
-                    Color outline_color,
-                    void (*render)(void *)) {
-  RA_Rectangle_init(
-      square, position, length, length, outline_thickness, inner_color, outline_color, render);
+void initSquare(RARectangle *square,
+                Vector2 position,
+                float length,
+                float outlineThickness,
+                Color innerColor,
+                Color outlineColor,
+                void (*render)(void *)) {
+  initRectangle(
+      square, position, length, length, outlineThickness, innerColor, outlineColor, render);
 }
 
-void RA_Square_defaultInit(RA_Rectangle *square, Vector2 position, float length) {
-  RA_Rectangle_defaultInit(square, position, length, length);
+void initDefaultSquare(RARectangle *square, Vector2 position, float length) {
+  initDefaultRectangle(square, position, length, length);
 }
 
-RA_Rectangle RA_Square_create(Vector2 position, float length) {
-  RA_Rectangle square;
-  RA_Square_defaultInit(&square, position, length);
+RARectangle createSquare(Vector2 position, float length) {
+  RARectangle square;
+  initDefaultSquare(&square, position, length);
   return square;
 }
 
-// -------------- RA_Square ----------------
+// -------------- RASquare ----------------
 
-// ---------------- RA_Wait ----------------
+// ---------------- RADelay ----------------
 
-static RA_Object wait_object;
+static RAObject wait_object;
 
-void RA_WaitAnimation_init(RA_Animation *anim, float duration) {
-  RA_Object_initEmpty(&wait_object);
-  RA_Animation_init(anim,
-                    &wait_object,
-                    duration,
-                    RA_Animation_defaultUpdate,
-                    RA_WaitAnimation_interpolate,
-                    RA_Animation_defaultPushToObjectList);
+void initDelayAnimation(Animation *anim, float duration) {
+  initEmptyRAObject(&wait_object);
+  initAnimation(anim,
+                &wait_object,
+                duration,
+                updateDefaultAnimation,
+                interpolateDelayAnimation,
+                pushToObjectsDefaultAnimation);
 }
 
-RA_Animation RA_WaitAnimation_create(float duration) {
-  RA_Animation anim;
-  RA_WaitAnimation_init(&anim, duration);
+Animation createDelayAnimation(float duration) {
+  Animation anim;
+  initDelayAnimation(&anim, duration);
   return anim;
 }
 
-void RA_WaitAnimation_interpolate(void *self, float time) {
+void interpolateDelayAnimation(void *self, float time) {
   (void)time;
   (void)self;
 }
 
-// ---------------- RA_Wait ----------------
+// ---------------- RADelay ----------------
 
-// -------------- RA_Disappear -------------
+// -------------- RAFadeOut -------------
 
-void RA_DisappearAnimation_init(RA_Animation *anim,
-                                RA_Object *obj,
-                                float duration,
-                                bool (*update)(void *, float),
-                                void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim, obj, duration, update, interpolate, RA_Animation_defaultPushToObjectList);
+void initFadeOutAnimation(Animation *anim,
+                          RAObject *obj,
+                          float duration,
+                          bool (*update)(void *, float),
+                          void (*interpolate)(void *, float)) {
+  initAnimation(anim, obj, duration, update, interpolate, pushToObjectsDefaultAnimation);
 }
 
-void RA_DisappearAnimation_defaultInit(RA_Animation *anim, RA_Object *obj) {
-  RA_DisappearAnimation_init(
-      anim, obj, 0.0f, RA_Animation_defaultUpdate, RA_DisappearAnimation_defaultInterpolate);
+void initDefaultFadeOutAnimation(Animation *anim, RAObject *obj) {
+  initFadeOutAnimation(anim, obj, 0.0f, updateDefaultAnimation, interpolateDefaultFadeOutAnimation);
 }
 
-RA_Animation RA_DisappearAnimation_create(RA_Object *obj) {
-  RA_Animation anim;
-  RA_DisappearAnimation_defaultInit(&anim, obj);
+Animation createFadeOutAnimation(RAObject *obj) {
+  Animation anim;
+  initDefaultFadeOutAnimation(&anim, obj);
   return anim;
 }
 
-void RA_DisappearAnimation_defaultInterpolate(void *self, float time) {
+void interpolateDefaultFadeOutAnimation(void *self, float time) {
   (void)time;
-  RA_Animation *anim = (RA_Animation *)self;
-  anim->object->render = RA_DisappearAnimation_defaultRender;
+  Animation *anim = (Animation *)self;
+  anim->object->render = renderDefaultFadeOutAnimation;
 }
 
-void RA_DisappearAnimation_defaultRender(void *self) {
+void renderDefaultFadeOutAnimation(void *self) {
   (void)self;
 }
 
-// -------------- RA_Disappear -------------
+// -------------- RAFadeOut -------------
 
-// ---------------- RA_Sync ----------------
+// ---------------- Sync ----------------
 
-void RA_SyncAnimation_init(RA_SyncAnimation *anim,
-                           RA_Animation **anims,
-                           uint8_t anim_count,
-                           void (*push_to_object_list)(RA_Scene *)) {
-  RA_Animation_init((RA_Animation *)anim,
-                    NULL,
-                    0,
-                    RA_SyncAnimation_defaultUpdate,
-                    RA_SyncAnimation_defaultInterpolate,
-                    push_to_object_list);
+void initSyncAnimation(SyncAnimation *anim,
+                       Animation **anims,
+                       uint8_t animCount,
+                       void (*pushToObjects)(Scene *)) {
+  initAnimation((Animation *)anim,
+                NULL,
+                0,
+                updateDefaultSyncAnimation,
+                interpolateDefaultSyncAnimation,
+                pushToObjects);
   anim->animations = anims;
-  anim->anim_count = anim_count;
+  anim->animCount = animCount;
 }
 
-void RA_SyncAnimation_defaultInit(RA_SyncAnimation *anim,
-                                  RA_Animation **anims,
-                                  uint8_t anim_count) {
-  RA_SyncAnimation_init(anim, anims, anim_count, RA_SyncAnimation_defaultPushToObjectList);
+void initDefaultSyncAnimation(SyncAnimation *anim, Animation **anims, uint8_t animCount) {
+  initSyncAnimation(anim, anims, animCount, pushToObjectsDefaultSyncAnimation);
 }
 
-RA_SyncAnimation RA_SyncAnimation_create(RA_Animation **anims, uint8_t anim_count) {
-  RA_SyncAnimation anim;
-  RA_SyncAnimation_defaultInit(&anim, anims, anim_count);
+SyncAnimation createSyncAnimation(Animation **anims, uint8_t animCount) {
+  SyncAnimation anim;
+  initDefaultSyncAnimation(&anim, anims, animCount);
   return anim;
 }
 
-bool RA_SyncAnimation_defaultUpdate(void *self, float dt) {
-  RA_SyncAnimation *anim = (RA_SyncAnimation *)self;
+bool updateDefaultSyncAnimation(void *self, float dt) {
+  SyncAnimation *anim = (SyncAnimation *)self;
 
   if (anim->base.done) return true;
 
-  uint8_t completed_num = 0;
+  uint8_t completedNum = 0;
 
-  for (uint8_t i = 0; i < anim->anim_count; i++) {
-    RA_Animation *each = anim->animations[i];
+  for (uint8_t i = 0; i < anim->animCount; i++) {
+    Animation *each = anim->animations[i];
 
     if (!each->done) {
-      each->elapsed_time += dt;
-      each->interpolate(each, fminf(each->elapsed_time / each->duration, 1.0f));
+      each->elapsedTime += dt;
+      each->interpolate(each, fminf(each->elapsedTime / each->duration, 1.0f));
     } else {
-      completed_num++;
+      completedNum++;
       continue;
     }
 
-    bool completed = (each->elapsed_time >= each->duration);
+    bool completed = (each->elapsedTime >= each->duration);
     if (completed) {
-      completed_num++;
+      completedNum++;
       each->done = true;
     }
   }
 
-  return completed_num == anim->anim_count;
+  return completedNum == anim->animCount;
 }
 
-void RA_SyncAnimation_defaultInterpolate(void *self, float time) {
+void interpolateDefaultSyncAnimation(void *self, float time) {
   (void)self;
   (void)time;
 }
 
-void RA_SyncAnimation_defaultPushToObjectList(RA_Scene *scene) {
-  RA_SyncAnimation *anim = (RA_SyncAnimation *)scene->current_animation;
-  for (uint8_t i = 0; i < anim->anim_count; i++) {
-    RA_Animation *each_anim = anim->animations[i];
-    RA_Object *each_obj = each_anim->object;
-    TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", each_anim->_id);
-    RA_ObjectList_push(&scene->object_list, each_obj);
+void pushToObjectsDefaultSyncAnimation(Scene *scene) {
+  SyncAnimation *anim = (SyncAnimation *)scene->currentAnimation;
+  for (uint8_t i = 0; i < anim->animCount; i++) {
+    Animation *eachAnim = anim->animations[i];
+    RAObject *eachObj = eachAnim->object;
+    TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", eachAnim->_id);
+    pushToRAObjects(&scene->objects, eachObj);
   }
 }
 
-// ---------------- RA_Sync ----------------
+// ---------------- Sync ----------------
 
-// ---------------- RA_Move ----------------
+// ---------------- Move ----------------
 
-void RA_MoveAnimation_init(RA_MoveAnimation *anim,
-                           RA_Animation *target_anim,
-                           float duration,
-                           Vector2 target_pos,
-                           bool (*update)(void *, float),
-                           void (*interpolate)(void *, float),
-                           void (*push_to_object_list)(RA_Scene *)) {
-  assert((target_anim != NULL) && (target_anim->object != NULL));
-  RA_Animation_init((RA_Animation *)anim, NULL, duration, update, interpolate, push_to_object_list);
-  anim->target_anim = target_anim;
-  anim->initial_position = target_anim->object->position;
-  anim->target_position = target_pos;
+void initMoveAnimation(MoveAnimation *anim,
+                       Animation *targetAnim,
+                       float duration,
+                       Vector2 targetPos,
+                       bool (*update)(void *, float),
+                       void (*interpolate)(void *, float),
+                       void (*pushToObjects)(Scene *)) {
+  assert((targetAnim != NULL) && (targetAnim->object != NULL));
+  initAnimation((Animation *)anim, NULL, duration, update, interpolate, pushToObjects);
+  anim->targetAnim = targetAnim;
+  anim->initialPosition = targetAnim->object->position;
+  anim->targetPosition = targetPos;
 }
 
-void RA_MoveAnimation_defaultInit(RA_MoveAnimation *anim,
-                                  RA_Animation *target_anim,
-                                  Vector2 target_pos) {
-  RA_MoveAnimation_init(anim,
-                        target_anim,
-                        0.8f,
-                        target_pos,
-                        RA_MoveAnimation_defaultUpdate,
-                        NULL,
-                        RA_MoveAnimation_defaultPushToObjectList);
+void initDefaultMoveAnimation(MoveAnimation *anim, Animation *targetAnim, Vector2 targetPos) {
+  initMoveAnimation(anim,
+                    targetAnim,
+                    0.8f,
+                    targetPos,
+                    updateDefaultMoveAnimation,
+                    NULL,
+                    pushToObjectsDefaultMoveAnimation);
 }
 
-RA_MoveAnimation RA_MoveAnimation_create(RA_Animation *target_anim, Vector2 target_pos) {
-  RA_MoveAnimation anim;
-  RA_MoveAnimation_defaultInit(&anim, target_anim, target_pos);
+MoveAnimation createMoveAnimation(Animation *targetAnim, Vector2 targetPos) {
+  MoveAnimation anim;
+  initDefaultMoveAnimation(&anim, targetAnim, targetPos);
   return anim;
 }
 
-bool RA_MoveAnimation_defaultUpdate(void *self, float dt) {
-  RA_MoveAnimation *anim = (RA_MoveAnimation *)self;
-  RA_Animation *target_anim = anim->target_anim;
+bool updateDefaultMoveAnimation(void *self, float dt) {
+  MoveAnimation *anim = (MoveAnimation *)self;
+  Animation *targetAnim = anim->targetAnim;
 
-  if (anim->base.done && target_anim->done) return true;
+  if (anim->base.done && targetAnim->done) return true;
 
-  float t = fminf(anim->base.elapsed_time / anim->base.duration, 1.0f);
-  float dx = (anim->target_position.x - anim->initial_position.x) * t;
-  float dy = (anim->target_position.y - anim->initial_position.y) * t;
+  float t = fminf(anim->base.elapsedTime / anim->base.duration, 1.0f);
+  float dx = (anim->targetPosition.x - anim->initialPosition.x) * t;
+  float dy = (anim->targetPosition.y - anim->initialPosition.y) * t;
 
-  anim->target_anim->object->position.x = anim->initial_position.x + dx;
-  anim->target_anim->object->position.y = anim->initial_position.y + dy;
+  anim->targetAnim->object->position.x = anim->initialPosition.x + dx;
+  anim->targetAnim->object->position.y = anim->initialPosition.y + dy;
 
-  bool inner_anim_completed = target_anim->update(target_anim, dt);
+  bool innerAnimCompleted = targetAnim->update(targetAnim, dt);
 
-  anim->base.elapsed_time += dt;
+  anim->base.elapsedTime += dt;
 
-  bool self_completed = anim->base.elapsed_time >= anim->base.duration;
-  if (self_completed) anim->base.done = true;
+  bool selfCompleted = anim->base.elapsedTime >= anim->base.duration;
+  if (selfCompleted) anim->base.done = true;
 
-  return inner_anim_completed && self_completed;
+  return innerAnimCompleted && selfCompleted;
 }
 
-void RA_MoveAnimation_defaultPushToObjectList(RA_Scene *scene) {
-  RA_MoveAnimation *anim = (RA_MoveAnimation *)scene->current_animation;
-  RA_Object *current_obj = anim->target_anim->object;
+void pushToObjectsDefaultMoveAnimation(Scene *scene) {
+  MoveAnimation *anim = (MoveAnimation *)scene->currentAnimation;
+  RAObject *currentObj = anim->targetAnim->object;
   TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", anim->base._id);
-  RA_ObjectList_push(&scene->object_list, current_obj);
+  pushToRAObjects(&scene->objects, currentObj);
 }
 
-// ---------------- RA_Move ----------------
+// ---------------- Move ----------------
 
-// ---------------- RA_Text ----------------
+// ---------------- RAText ----------------
 
-void RA_Text_init(RA_Text *text,
-                  char *full_text,
-                  char *font_path,
-                  Color tint,
-                  float char_reveal_time,
-                  float font_size,
-                  float spacing,
-                  Vector2 pos,
-                  void (*render)(void *)) {
-  RA_Object_init(&text->base, pos, tint, render);
+void initText(RAText *text,
+              char *fullText,
+              char *textureIdx,
+              Color tint,
+              float charRevealTime,
+              float fontSize,
+              float spacing,
+              Vector2 pos,
+              void (*render)(void *)) {
+  initRAObject(&text->base, pos, tint, render);
   text->spacing = spacing;
-  text->font_size = font_size;
-  text->full_text = full_text;
-  text->display_char_count = 0;
-  text->char_reveal_time = char_reveal_time;
+  text->fontSize = fontSize;
+  text->fullText = fullText;
+  text->displayCharCount = 0;
+  text->charRevealTime = charRevealTime;
 
-  if (font_path != NULL) {
-    RA_Text_setFont(text, font_path);
+  if (textureIdx != NULL) {
+    setFontForText(text, textureIdx);
   } else {
-    text->font_idx = 0;
+    text->fontIdx = 0;
   }
 }
 
-void RA_Text_defaultInit(RA_Text *text, char *full_text, Vector2 pos) {
-  RA_Text_init(text, full_text, NULL, BLACK, 0.03f, 100, 12.5f, pos, RA_Text_defaultRender);
+void initDefaultText(RAText *text, char *fullText, Vector2 pos) {
+  initText(text, fullText, NULL, BLACK, 0.03f, 100, 12.5f, pos, renderDefaultText);
 }
 
-RA_Text RA_Text_create(char *full_text, Vector2 pos) {
-  RA_Text text;
-  RA_Text_defaultInit(&text, full_text, pos);
+RAText createText(char *fullText, Vector2 pos) {
+  RAText text;
+  initDefaultText(&text, fullText, pos);
   return text;
 }
 
-void RA_Text_defaultRender(void *self) {
-  RA_Text *text = (RA_Text *)self;
+void renderDefaultText(void *self) {
+  RAText *text = (RAText *)self;
 
-  Font font = font_list.fonts[text->font_idx];
+  Font font = fonts.fonts[text->fontIdx];
   Color tint = text->base.color;
-  char display_text[text->display_char_count];
+  char displayText[text->displayCharCount];
 
-  strncpy(display_text, text->full_text, text->display_char_count - 1);
-  display_text[text->display_char_count - 1] = '\0';
+  strncpy(displayText, text->fullText, text->displayCharCount - 1);
+  displayText[text->displayCharCount - 1] = '\0';
 
-  DrawTextEx(font, display_text, text->base.position, text->font_size, text->spacing, tint);
+  DrawTextEx(font, displayText, text->base.position, text->fontSize, text->spacing, tint);
 }
 
-void RA_Text_setFont(RA_Text *text, char *font_path) {
-  Font font = LoadFont(font_path);
-  RA_FontList_push(&font_list, font);
-  text->font_idx = font_list.count - 1;
+void setFontForText(RAText *text, char *textureIdx) {
+  Font font = LoadFont(textureIdx);
+  pushToFonts(&fonts, font);
+  text->fontIdx = fonts.count - 1;
 }
 
-void RA_Text_setFontEx(
-    RA_Text *text, char *font_path, int font_size, int *codepoints, int codepoint_count) {
-  Font font = LoadFontEx(font_path, font_size, codepoints, codepoint_count);
-  RA_FontList_push(&font_list, font);
-  text->font_idx = font_list.count - 1;
+void setFontForTextEx(
+    RAText *text, char *textureIdx, int fontSize, int *codepoints, int codepointCount) {
+  Font font = LoadFontEx(textureIdx, fontSize, codepoints, codepointCount);
+  pushToFonts(&fonts, font);
+  text->fontIdx = fonts.count - 1;
 }
 
-void RA_TextAnimation_init(RA_Animation *anim,
-                           RA_Text *text,
-                           float duration,
-                           bool (*update)(void *, float),
-                           void (*interpolate)(void *, float)) {
-  RA_Animation_init(
-      anim, (RA_Object *)text, duration, update, interpolate, RA_Animation_defaultPushToObjectList);
+void initTextAnimation(Animation *anim,
+                       RAText *text,
+                       float duration,
+                       bool (*update)(void *, float),
+                       void (*interpolate)(void *, float)) {
+  initAnimation(
+      anim, (RAObject *)text, duration, update, interpolate, pushToObjectsDefaultAnimation);
 }
 
-void RA_TextAnimation_defaultInit(RA_Animation *anim, RA_Text *text) {
-  RA_TextAnimation_init(anim,
-                        text,
-                        text->char_reveal_time * strlen(text->full_text),
-                        RA_Animation_defaultUpdate,
-                        RA_TextAnimation_defaultInterpolate);
+void initDefaultTextAnimation(Animation *anim, RAText *text) {
+  initTextAnimation(anim,
+                    text,
+                    text->charRevealTime * strlen(text->fullText),
+                    updateDefaultAnimation,
+                    interpolateDefaultTextAnimation);
 }
 
-RA_Animation RA_TextAnimation_create(RA_Text *text) {
-  RA_Animation anim;
-  RA_TextAnimation_defaultInit(&anim, text);
+Animation createTextAnimation(RAText *text) {
+  Animation anim;
+  initDefaultTextAnimation(&anim, text);
   return anim;
 }
 
-void RA_TextAnimation_defaultInterpolate(void *self, float time) {
+void interpolateDefaultTextAnimation(void *self, float time) {
   (void)time;
-  RA_Animation *anim = (RA_Animation *)self;
-  RA_Text *text = (RA_Text *)anim->object;
+  Animation *anim = (Animation *)self;
+  RAText *text = (RAText *)anim->object;
 
-  if ((anim->elapsed_time >= (text->char_reveal_time * text->display_char_count)) &&
-      (text->display_char_count <= strlen(text->full_text)))
-    text->display_char_count++;
+  if ((anim->elapsedTime >= (text->charRevealTime * text->displayCharCount)) &&
+      (text->displayCharCount <= strlen(text->fullText)))
+    text->displayCharCount++;
 }
 
-// ---------------- RA_Text ----------------
+// ---------------- RAText ----------------
 
-// --------------- RA_Image ----------------
+// --------------- RAImage ----------------
 
-void RA_Image_init(RA_Image *image,
-                   char *image_path,
-                   Vector2 pos,
-                   float scale,
-                   Color tint,
-                   void (*render)(void *)) {
-  RA_Object_init(&image->base, pos, tint, render);
-  image->image_path = image_path;
+void initImage(
+    RAImage *image, char *filename, Vector2 pos, float scale, Color tint, void (*render)(void *)) {
+  initRAObject(&image->base, pos, tint, render);
+  image->filename = filename;
   image->scale = scale;
 
-  Texture raylib_Texture = LoadTexture(image_path);
-  RA_TextureList_push(&texture_list, raylib_Texture);
+  Texture raylib_Texture = LoadTexture(filename);
+  pushToTextures(&textures, raylib_Texture);
 
-  image->texture_idx = texture_list.count - 1;
+  image->textureIdx = textures.count - 1;
 }
 
-void RA_Image_defaultInit(RA_Image *Texture, char *image_path, Vector2 pos) {
-  RA_Image_init(Texture, image_path, pos, 1.0f, RAYWHITE, RA_Image_defaultRender);
+void initDefaultImage(RAImage *Texture, char *filename, Vector2 pos) {
+  initImage(Texture, filename, pos, 1.0f, RAYWHITE, renderDefaultImage);
 }
 
-RA_Image RA_Image_create(char *image_path, Vector2 pos) {
-  RA_Image Texture;
-  RA_Image_defaultInit(&Texture, image_path, pos);
-  return Texture;
+RAImage createImage(char *filename, Vector2 pos) {
+  RAImage image;
+  initDefaultImage(&image, filename, pos);
+  return image;
 }
 
-void RA_Image_defaultRender(void *self) {
-  RA_Image *image = (RA_Image *)self;
-  Texture texture = texture_list.textures[image->texture_idx];
+void renderDefaultImage(void *self) {
+  RAImage *image = (RAImage *)self;
+  Texture texture = textures.textures[image->textureIdx];
   Color tint = image->base.color;
   DrawTextureEx(texture, image->base.position, 0.0f, image->scale, tint);
 }
 
-void RA_ImageAnimation_init(RA_Animation *anim,
-                            RA_Image *Texture,
-                            float duration,
-                            bool (*update)(void *, float),
-                            void (*interpolate)(void *, float)) {
-  RA_Animation_init(anim,
-                    (RA_Object *)Texture,
-                    duration,
-                    update,
-                    interpolate,
-                    RA_Animation_defaultPushToObjectList);
+void initImageAnimation(Animation *anim,
+                        RAImage *Texture,
+                        float duration,
+                        bool (*update)(void *, float),
+                        void (*interpolate)(void *, float)) {
+  initAnimation(
+      anim, (RAObject *)Texture, duration, update, interpolate, pushToObjectsDefaultAnimation);
 }
 
-void RA_ImageAnimation_defaultInit(RA_Animation *anim, RA_Image *Texture) {
-  RA_ImageAnimation_init(
-      anim, Texture, 0.8f, RA_Animation_defaultUpdate, RA_ImageAnimation_defaultInterpolate);
+void initDefaultImageAnimation(Animation *anim, RAImage *Texture) {
+  initImageAnimation(anim, Texture, 0.8f, updateDefaultAnimation, interpolateDefaultImageAnimation);
 }
 
-RA_Animation RA_ImageAnimation_create(RA_Image *Texture) {
-  RA_Animation anim;
-  RA_ImageAnimation_defaultInit(&anim, Texture);
+Animation createImageAnimation(RAImage *Texture) {
+  Animation anim;
+  initDefaultImageAnimation(&anim, Texture);
   return anim;
 }
 
-void RA_ImageAnimation_defaultInterpolate(void *self, float time) {
-  RA_Animation *anim = (RA_Animation *)self;
-  RA_Image *image = (RA_Image *)anim->object;
+void interpolateDefaultImageAnimation(void *self, float time) {
+  Animation *anim = (Animation *)self;
+  RAImage *image = (RAImage *)anim->object;
   image->base.color.a = (uint8_t)(UINT8_MAX * time);
 }
 
-// --------------- RA_Image ----------------
+// --------------- RAImage ----------------

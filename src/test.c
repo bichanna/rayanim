@@ -2,66 +2,69 @@
 #include "raylib.h"
 
 int main(void) {
-  RA_Scene scene;
-  RA_Scene_init(&scene, "Test scene", 2400, 1600, RAYWHITE);
+  Scene scene;
+  initScene(&scene, "Test scene", 2400, 1600, RAYWHITE);
 
-  RA_Animation wait1sec = RA_WaitAnimation_create(1.0f);
+  Animation wait1sec = createDelayAnimation(1.0f);
 
-  RA_Circle circle1 = RA_Circle_create((Vector2){800, 500}, 200);
+  RACircle circle1 = createCircle((Vector2){800, 500}, 200);
   circle1.base.color = GRAY;
-  circle1.outline_color = DARKGRAY;
-  circle1.outline_thickness = 60.0f;
-  RA_Animation circle1_anim = RA_CircleAnimation_create(&circle1);
-  circle1_anim.duration = 1.0f;
+  circle1.outlineColor = DARKGRAY;
+  circle1.outlineThickness = 60.0f;
+  Animation circle1Anim = createCircleAnimation(&circle1);
+  circle1Anim.duration = 1.0f;
 
-  RA_Circle circle2 = RA_Circle_create((Vector2){1600, 1000}, 310);
-  circle2.outline_thickness = 20.0f;
-  circle2.base.render = RA_Circle_fillInnerRender;
-  RA_Animation circle2_anim = RA_CircleAnimation_create(&circle2);
-  circle2_anim.duration = 1.8f;
+  RACircle circle2 = createCircle((Vector2){1600, 1000}, 310);
+  circle2.outlineThickness = 20.0f;
+  circle2.base.render = renderFillInnerCircle;
+  Animation circle2Anim = createCircleAnimation(&circle2);
+  circle2Anim.duration = 1.8f;
 
-  RA_Rectangle rect1 = RA_Rectangle_create((Vector2){300, 700}, 2000, 600);
-  rect1.base.render = RA_Rectangle_fillInnerRender;
-  rect1.outline_thickness = 18.0f;
-  RA_Animation rect1_anim = RA_RectangleAnimation_create(&rect1);
-  rect1_anim.duration = 2.2f;
-  RA_Animation circle1_disappear_anim = RA_DisappearAnimation_create((RA_Object *)&circle1);
+  RARectangle rect1 = createRectangle((Vector2){300, 700}, 2000, 600);
+  rect1.base.render = renderFillInnerRectangle;
+  rect1.outlineThickness = 18.0f;
+  Animation rect1Anim = createRectangleAnimation(&rect1);
+  rect1Anim.duration = 2.2f;
+  Animation circle1FadeOut = createFadeOutAnimation((RAObject *)&circle1);
 
-  RA_Animation *sync_anims[] = {&circle1_anim, &circle2_anim};
-  RA_SyncAnimation circles_anim = RA_SyncAnimation_create(sync_anims, 2);
+  Animation *syncAnims[] = {&circle1Anim, &circle2Anim};
+  SyncAnimation circlesAnim = createSyncAnimation(syncAnims, 2);
 
-  RA_MoveAnimation rect1_move = RA_MoveAnimation_create(&rect1_anim, (Vector2){200, 600});
+  MoveAnimation rect1Move = createMoveAnimation(&rect1Anim, (Vector2){200, 600});
 
-  RA_Text text1 = RA_Text_create("Hello, this is rayanim!", (Vector2){800, 800});
-  RA_Text_setFontEx(&text1, "Iosevka-Bold.ttf", 255, NULL, 0);
-  RA_Animation text1_anim = RA_TextAnimation_create(&text1);
+  RAText text1 = createText("Hello, this is rayanim!", (Vector2){800, 800});
+  setFontForTextEx(&text1, "Iosevka-Bold.ttf", 255, NULL, 0);
+  Animation text1Anim = createTextAnimation(&text1);
 
-  RA_Image image1 = RA_Image_create("/home/nobu/Downloads/bach-fun.png", (Vector2){100, 100});
-  RA_Animation image1_anim = RA_ImageAnimation_create(&image1);
+  RAImage image1 = createImage("/home/nobu/Downloads/bach-fun.png", (Vector2){100, 100});
+  Animation image1Anim = createImageAnimation(&image1);
 
-  RA_Animation *sync_anims2[] = {&image1_anim, &text1_anim};
-  RA_SyncAnimation sync_image1_text1 = RA_SyncAnimation_create(sync_anims2, 2);
+  Animation *syncAnims2[] = {&image1Anim, &text1Anim};
+  SyncAnimation syncImage1Text1 = createSyncAnimation(syncAnims2, 2);
 
-  RA_Rectangle square1 = RA_Square_create((Vector2){2000, 1000}, 200);
-  square1.outline_color = RED;
+  RARectangle square1 = createSquare((Vector2){1000, 230}, 350);
+  square1.outlineThickness = 0.0f;
+  square1.outlineColor = RED;
   square1.base.color = RED;
-  square1.base.render = RA_Rectangle_fillInnerRender;
-  RA_Animation square1_anim = RA_RectangleAnimation_create(&square1);
+  square1.base.color.a = 80;
+  square1.base.render = renderFillInnerRectangle;
+  Animation square1Anim = createRectangleAnimation(&square1);
+  square1Anim.duration = 2.5f;
 
-  RA_Animation *anims[] = {&wait1sec,
-                           (RA_Animation *)&circles_anim,
-                           &rect1_anim,
-                           (RA_Animation *)&rect1_move,
-                           &wait1sec,
-                           &circle1_disappear_anim,
-                           (RA_Animation *)&sync_image1_text1,
-                           &square1_anim};
+  Animation *anims[] = {&wait1sec,
+                        (Animation *)&circlesAnim,
+                        &rect1Anim,
+                        (Animation *)&rect1Move,
+                        &wait1sec,
+                        &circle1FadeOut,
+                        (Animation *)&syncImage1Text1,
+                        &square1Anim};
 
-  RA_Scene_play_these(&scene, anims, 8);
+  playAnimations(&scene, anims, 8);
 
   startScene(&scene);
 
-  RA_Scene_destroy(&scene);
+  destroyScene(&scene);
 
   return 0;
 }
