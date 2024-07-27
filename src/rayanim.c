@@ -256,9 +256,9 @@ void destroyScene(Scene *scene) {
   destroyAnimations(&scene->animations);
   scene = NULL;
 
-  for (int i = 0; i < textureCount; i++) UnloadTexture(textures[i]);
+  // for (int i = 0; i < textureCount; i++) UnloadTexture(textures[i]);
 
-  for (int i = 0; i < fontCount; i++) UnloadFont(fonts[i]);
+  // for (int i = 0; i < fontCount; i++) UnloadFont(fonts[i]);
 }
 
 void startScene(Scene *scene) {
@@ -585,7 +585,7 @@ void interpolateDelayAnimation(void *self, float time) {
 
 // ---------------- RADelay ----------------
 
-// -------------- RAFadeOut -------------
+// ---------------- FadeOut ----------------
 
 void initFadeOutAnimation(Animation *anim,
                           RAObject *obj,
@@ -615,9 +615,9 @@ void renderDefaultFadeOutAnimation(void *self) {
   (void)self;
 }
 
-// -------------- RAFadeOut -------------
+// ---------------- FadeOut ----------------
 
-// ---------------- Sync ----------------
+// ----------------- Sync ------------------
 
 void initSyncAnimation(SyncAnimation *anim,
                        Animation **anims,
@@ -686,9 +686,9 @@ void pushToObjectsDefaultSyncAnimation(Scene *scene) {
   }
 }
 
-// ---------------- Sync ----------------
+// ----------------- Sync ------------------
 
-// ---------------- Move ----------------
+// ----------------- Move ------------------
 
 void initMoveAnimation(MoveAnimation *anim,
                        Animation *targetAnim,
@@ -750,7 +750,7 @@ void pushToObjectsDefaultMoveAnimation(Scene *scene) {
   pushToRAObjects(&scene->objects, currentObj);
 }
 
-// ---------------- Move ----------------
+// ----------------- Move ------------------
 
 // ---------------- RAText ----------------
 
@@ -853,8 +853,8 @@ void initImage(
   image->textureIdx = textureCount - 1;
 }
 
-void initDefaultImage(RAImage *Texture, char *filename, Vector2 pos) {
-  initImage(Texture, filename, pos, 1.0f, RAYWHITE, renderDefaultImage);
+void initDefaultImage(RAImage *image, char *filename, Vector2 pos) {
+  initImage(image, filename, pos, 1.0f, RAYWHITE, renderDefaultImage);
 }
 
 RAImage createImage(char *filename, Vector2 pos) {
@@ -872,21 +872,21 @@ void renderDefaultImage(void *self) {
 }
 
 void initImageAnimation(Animation *anim,
-                        RAImage *Texture,
+                        RAImage *image,
                         float duration,
                         bool (*update)(void *, float),
                         void (*interpolate)(void *, float)) {
   initAnimation(
-      anim, (RAObject *)Texture, duration, update, interpolate, pushToObjectsDefaultAnimation);
+      anim, (RAObject *)image, duration, update, interpolate, pushToObjectsDefaultAnimation);
 }
 
-void initDefaultImageAnimation(Animation *anim, RAImage *Texture) {
-  initImageAnimation(anim, Texture, 0.8f, updateDefaultAnimation, interpolateDefaultImageAnimation);
+void initDefaultImageAnimation(Animation *anim, RAImage *image) {
+  initImageAnimation(anim, image, 0.8f, updateDefaultAnimation, interpolateDefaultImageAnimation);
 }
 
-Animation createImageAnimation(RAImage *Texture) {
+Animation createImageAnimation(RAImage *image) {
   Animation anim;
-  initDefaultImageAnimation(&anim, Texture);
+  initDefaultImageAnimation(&anim, image);
   return anim;
 }
 
