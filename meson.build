@@ -4,7 +4,7 @@ project('rayanim', 'c',
   default_options: [
     'warning_level=3',
     'werror=true',
-    'c_std=c17'
+    'c_std=c99'
   ]
 )
 

@@ -3,7 +3,6 @@
 
 #include <raylib.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #define DA_INIT_SIZE 12
@@ -14,13 +13,13 @@ typedef int FontIndex;
 typedef int TextureIndex;
 
 Texture textures[255];
-int textureCount = 0;
+unsigned char textureCount = 0;
 
 Font fonts[255];
-int fontCount = 0;
+unsigned char fontCount = 0;
 
 typedef struct RAObject {
-  uint32_t _id;
+  int _id;
   Vector2 position;
   Color color;
 
@@ -29,12 +28,12 @@ typedef struct RAObject {
 
 typedef struct RAObjects {
   RAObject **objects;
-  uint32_t count;
-  uint32_t capacity;
+  int count;
+  int capacity;
 } RAObjects;
 
 typedef struct Animation {
-  uint32_t _id;
+  int _id;
   RAObject *object;
   float duration;
   float elapsedTime;
@@ -47,8 +46,8 @@ typedef struct Animation {
 
 typedef struct Animations {
   Animation **animations;
-  uint32_t count;
-  uint32_t capacity;
+  int count;
+  int capacity;
 } Animations;
 
 struct Scene {
@@ -64,8 +63,8 @@ struct Scene {
 void initRAObjects(RAObjects *objects);
 void pushToRAObjects(RAObjects *objects, RAObject *newObj);
 RAObject *popFromRAObjects(RAObjects *objects);
-RAObject *getFromRAObjects(RAObjects *objects, uint32_t idx);
-void setToRAObjects(RAObjects *objects, uint32_t idx, RAObject *newObj);
+RAObject *getFromRAObjects(RAObjects *objects, int idx);
+void setToRAObjects(RAObjects *objects, int idx, RAObject *newObj);
 bool containsInRAObjects(RAObjects *objects, RAObject *obj);
 void destroyRAObjects(RAObjects *objects);
 
@@ -73,8 +72,8 @@ void initAnimations(Animations *anims);
 void pushToAnimations(Animations *anims, Animation *newAnim);
 Animation *popFromAnimations(Animations *anims);
 Animation *popFirstFromAnimations(Animations *anims);
-Animation *getFromAnimations(Animations *anims, uint32_t idx);
-void setToAnimations(Animations *anims, uint32_t idx, Animation *newAnim);
+Animation *getFromAnimations(Animations *anims, int idx);
+void setToAnimations(Animations *anims, int idx, Animation *newAnim);
 bool containsInAnimations(Animations *anims, Animation *anim);
 void destroyAnimations(Animations *anims);
 
@@ -222,15 +221,15 @@ void renderDefaultFadeOutAnimation(void *self);
 typedef struct SyncAnimation {
   Animation base;
   Animation **animations;
-  uint8_t animCount;
+  int animCount;
 } SyncAnimation;
 
 void initSyncAnimation(SyncAnimation *anim,
                        Animation **anims,
-                       uint8_t animCount,
+                       int animCount,
                        void (*pushToObjects)(Scene *));
-void initDefaultSyncAnimation(SyncAnimation *anim, Animation **anims, uint8_t animCount);
-SyncAnimation createSyncAnimation(Animation **anims, uint8_t animCount);
+void initDefaultSyncAnimation(SyncAnimation *anim, Animation **anims, int animCount);
+SyncAnimation createSyncAnimation(Animation **anims, int animCount);
 bool updateDefaultSyncAnimation(void *self, float dt);
 void interpolateDefaultSyncAnimation(void *self, float time);
 void pushToObjectsDefaultSyncAnimation(Scene *scene);

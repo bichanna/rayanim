@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static uint32_t objectId = 0;
-static uint32_t animationId = 0;
+static int objectId = 0;
+static int animationId = 0;
 
 void initRAObjects(RAObjects *objects) {
   objects->count = 0;
@@ -36,7 +36,7 @@ RAObject *popFromRAObjects(RAObjects *objects) {
   return objects->objects[--objects->count];
 }
 
-RAObject *getFromRAObjects(RAObjects *objects, uint32_t idx) {
+RAObject *getFromRAObjects(RAObjects *objects, int idx) {
   assert(objects != NULL);
 
   if (objects->count <= idx) return NULL;
@@ -44,7 +44,7 @@ RAObject *getFromRAObjects(RAObjects *objects, uint32_t idx) {
   return objects->objects[idx];
 }
 
-void setToRAObjects(RAObjects *objects, uint32_t idx, RAObject *newObj) {
+void setToRAObjects(RAObjects *objects, int idx, RAObject *newObj) {
   assert(objects != NULL);
 
   if (objects->count <= idx) return;
@@ -53,7 +53,7 @@ void setToRAObjects(RAObjects *objects, uint32_t idx, RAObject *newObj) {
 }
 
 bool containsInRAObjects(RAObjects *objects, RAObject *obj) {
-  for (uint32_t i = 0; i < objects->count; i++)
+  for (int i = 0; i < objects->count; i++)
     if (objects->objects[i]->_id == obj->_id) return true;
 
   return false;
@@ -97,14 +97,14 @@ Animation *popFirstFromAnimations(Animations *anims) {
 
   Animation *firstAnim = anims->animations[0];
 
-  for (uint32_t i = 1; i < anims->count; i++) anims->animations[i - 1] = anims->animations[i];
+  for (int i = 1; i < anims->count; i++) anims->animations[i - 1] = anims->animations[i];
 
   anims->count--;
 
   return firstAnim;
 }
 
-Animation *getFromAnimations(Animations *anims, uint32_t idx) {
+Animation *getFromAnimations(Animations *anims, int idx) {
   assert(anims != NULL);
 
   if (anims->count <= idx) return NULL;
@@ -112,7 +112,7 @@ Animation *getFromAnimations(Animations *anims, uint32_t idx) {
   return anims->animations[idx];
 }
 
-void setToAnimations(Animations *anims, uint32_t idx, Animation *newAnim) {
+void setToAnimations(Animations *anims, int idx, Animation *newAnim) {
   assert(anims != NULL);
 
   if (anims->count <= idx) return;
@@ -121,7 +121,7 @@ void setToAnimations(Animations *anims, uint32_t idx, Animation *newAnim) {
 }
 
 bool containsInAnimations(Animations *anims, Animation *anim) {
-  for (uint32_t i = 0; i < anims->count; i++)
+  for (int i = 0; i < anims->count; i++)
     if (anims->animations[i]->_id == anim->_id) return true;
 
   return false;
@@ -224,7 +224,7 @@ void renderScene(Scene *scene) {
   BeginDrawing();
 
   ClearBackground(scene->color);
-  for (uint32_t i = 0; i < scene->objects.count; i++) {
+  for (int i = 0; i < scene->objects.count; i++) {
     RAObject *obj = getFromRAObjects(&scene->objects, i);
     if (obj != NULL) obj->render(obj);
   }
@@ -621,7 +621,7 @@ void renderDefaultFadeOutAnimation(void *self) {
 
 void initSyncAnimation(SyncAnimation *anim,
                        Animation **anims,
-                       uint8_t animCount,
+                       int animCount,
                        void (*pushToObjects)(Scene *)) {
   initAnimation((Animation *)anim,
                 NULL,
@@ -633,11 +633,11 @@ void initSyncAnimation(SyncAnimation *anim,
   anim->animCount = animCount;
 }
 
-void initDefaultSyncAnimation(SyncAnimation *anim, Animation **anims, uint8_t animCount) {
+void initDefaultSyncAnimation(SyncAnimation *anim, Animation **anims, int animCount) {
   initSyncAnimation(anim, anims, animCount, pushToObjectsDefaultSyncAnimation);
 }
 
-SyncAnimation createSyncAnimation(Animation **anims, uint8_t animCount) {
+SyncAnimation createSyncAnimation(Animation **anims, int animCount) {
   SyncAnimation anim;
   initDefaultSyncAnimation(&anim, anims, animCount);
   return anim;
@@ -648,9 +648,9 @@ bool updateDefaultSyncAnimation(void *self, float dt) {
 
   if (anim->base.done) return true;
 
-  uint8_t completedNum = 0;
+  int completedNum = 0;
 
-  for (uint8_t i = 0; i < anim->animCount; i++) {
+  for (int i = 0; i < anim->animCount; i++) {
     Animation *each = anim->animations[i];
 
     if (!each->done) {
@@ -678,7 +678,7 @@ void interpolateDefaultSyncAnimation(void *self, float time) {
 
 void pushToObjectsDefaultSyncAnimation(Scene *scene) {
   SyncAnimation *anim = (SyncAnimation *)scene->currentAnimation;
-  for (uint8_t i = 0; i < anim->animCount; i++) {
+  for (int i = 0; i < anim->animCount; i++) {
     Animation *eachAnim = anim->animations[i];
     RAObject *eachObj = eachAnim->object;
     TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", eachAnim->_id);
@@ -893,7 +893,7 @@ Animation createImageAnimation(RAImage *image) {
 void interpolateDefaultImageAnimation(void *self, float time) {
   Animation *anim = (Animation *)self;
   RAImage *image = (RAImage *)anim->object;
-  image->base.color.a = (uint8_t)(UINT8_MAX * time);
+  image->base.color.a = (unsigned char)(255 * time);
 }
 
 // --------------- RAImage ----------------
