@@ -5,7 +5,7 @@ int main(void) {
   Scene scene;
   initScene(&scene, "Test scene", 2400, 1600, RAYWHITE);
 
-  Animation wait1sec = createDelayAnimation(1.0f);
+  Animation delay1sec = createDelayAnimation(1.0f);
 
   RACircle circle1 = createCircle((Vector2){800, 500}, 200);
   circle1.base.color = GRAY;
@@ -38,6 +38,7 @@ int main(void) {
 
   RAImage image1 = createImage("/home/nobu/Downloads/bach-fun.png", (Vector2){100, 100});
   Animation image1Anim = createImageAnimation(&image1);
+  Animation image1FadeOut = createFadeOutAnimation((RAObject *)&image1);
 
   Animation *syncAnims2[] = {&image1Anim, &text1Anim};
   SyncAnimation syncImage1Text1 = createSyncAnimation(syncAnims2, 2);
@@ -51,16 +52,18 @@ int main(void) {
   Animation square1Anim = createRectangleAnimation(&square1);
   square1Anim.duration = 2.5f;
 
-  Animation *anims[] = {&wait1sec,
+  Animation *anims[] = {&delay1sec,
                         (Animation *)&circlesAnim,
                         &rect1Anim,
                         (Animation *)&rect1Move,
-                        &wait1sec,
+                        &delay1sec,
                         &circle1FadeOut,
+                        &delay1sec,
                         (Animation *)&syncImage1Text1,
-                        &square1Anim};
+                        &square1Anim,
+                        &image1FadeOut};
 
-  playAnimations(&scene, anims, 8);
+  playAnimations(&scene, anims, 10);
 
   startScene(&scene);
 

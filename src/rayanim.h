@@ -65,7 +65,7 @@ void pushToRAObjects(RAObjects *objects, RAObject *newObj);
 RAObject *popFromRAObjects(RAObjects *objects);
 RAObject *getFromRAObjects(RAObjects *objects, int idx);
 void setToRAObjects(RAObjects *objects, int idx, RAObject *newObj);
-bool containsInRAObjects(RAObjects *objects, RAObject *obj);
+int findIndexFromRAObjects(RAObjects *objects, RAObject *obj);
 void destroyRAObjects(RAObjects *objects);
 
 void initAnimations(Animations *anims);
@@ -212,7 +212,6 @@ void initFadeOutAnimation(Animation *anim,
 void initDefaultFadeOutAnimation(Animation *anim, RAObject *obj);
 Animation createFadeOutAnimation(RAObject *obj);
 void interpolateDefaultFadeOutAnimation(void *self, float time);
-void renderDefaultFadeOutAnimation(void *self);
 
 // ---------------- FadeOut ---------------
 

@@ -52,11 +52,11 @@ void setToRAObjects(RAObjects *objects, int idx, RAObject *newObj) {
   objects->objects[idx] = newObj;
 }
 
-bool containsInRAObjects(RAObjects *objects, RAObject *obj) {
+int findIndexFromRAObjects(RAObjects *objects, RAObject *obj) {
   for (int i = 0; i < objects->count; i++)
-    if (objects->objects[i]->_id == obj->_id) return true;
+    if (objects->objects[i]->_id == obj->_id) return i;
 
-  return false;
+  return -1;
 }
 
 void destroyRAObjects(RAObjects *objects) {
@@ -186,8 +186,15 @@ bool updateDefaultAnimation(void *self, float dt) {
 
 void pushToObjectsDefaultAnimation(Scene *scene) {
   RAObject *currentObj = scene->currentAnimation->object;
+  int idx = findIndexFromRAObjects(&scene->objects, currentObj);
+
+  if (idx == -1) {
+    pushToRAObjects(&scene->objects, currentObj);
+  } else {
+    setToRAObjects(&scene->objects, idx, currentObj);
+  }
+
   TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", scene->currentAnimation->_id);
-  pushToRAObjects(&scene->objects, currentObj);
 }
 
 void initScene(Scene *scene, const char *title, int width, int height, Color color) {
@@ -317,6 +324,7 @@ RACircle createCircle(Vector2 center, float radius) {
 
 void renderDefaultCircle(void *self) {
   RACircle *circle = (RACircle *)self;
+  circle->outlineColor.a = circle->base.color.a;
 
   float innerRadius = circle->radius - circle->outlineThickness / 2;
   float outerRadius = circle->radius + circle->outlineThickness / 2;
@@ -331,6 +339,7 @@ void renderDefaultCircle(void *self) {
 
 void renderFillInnerCircle(void *self) {
   RACircle *circle = (RACircle *)self;
+  circle->outlineColor.a = circle->base.color.a;
 
   float halfThickness = circle->outlineThickness / 2;
 
@@ -410,6 +419,7 @@ RARectangle createRectangle(Vector2 position, float width, float height) {
 
 void renderDefaultRectangle(void *self) {
   RARectangle *rect = (RARectangle *)self;
+  rect->outlineColor.a = rect->base.color.a;
 
   float x = rect->base.position.x;
   float y = rect->base.position.y;
@@ -446,6 +456,7 @@ void renderDefaultRectangle(void *self) {
 
 void renderFillInnerRectangle(void *self) {
   RARectangle *rect = (RARectangle *)self;
+  rect->outlineColor.a = rect->base.color.a;
 
   float x = rect->base.position.x;
   float y = rect->base.position.y;
@@ -596,7 +607,7 @@ void initFadeOutAnimation(Animation *anim,
 }
 
 void initDefaultFadeOutAnimation(Animation *anim, RAObject *obj) {
-  initFadeOutAnimation(anim, obj, 0.0f, updateDefaultAnimation, interpolateDefaultFadeOutAnimation);
+  initFadeOutAnimation(anim, obj, 1.0f, updateDefaultAnimation, interpolateDefaultFadeOutAnimation);
 }
 
 Animation createFadeOutAnimation(RAObject *obj) {
@@ -606,13 +617,8 @@ Animation createFadeOutAnimation(RAObject *obj) {
 }
 
 void interpolateDefaultFadeOutAnimation(void *self, float time) {
-  (void)time;
   Animation *anim = (Animation *)self;
-  anim->object->render = renderDefaultFadeOutAnimation;
-}
-
-void renderDefaultFadeOutAnimation(void *self) {
-  (void)self;
+  anim->object->color.a = 255 - (unsigned char)(255 * time);
 }
 
 // ---------------- FadeOut ----------------
@@ -678,11 +684,19 @@ void interpolateDefaultSyncAnimation(void *self, float time) {
 
 void pushToObjectsDefaultSyncAnimation(Scene *scene) {
   SyncAnimation *anim = (SyncAnimation *)scene->currentAnimation;
+
   for (int i = 0; i < anim->animCount; i++) {
     Animation *eachAnim = anim->animations[i];
     RAObject *eachObj = eachAnim->object;
+    int idx = findIndexFromRAObjects(&scene->objects, eachObj);
+
+    if (idx == -1) {
+      pushToRAObjects(&scene->objects, eachObj);
+    } else {
+      setToRAObjects(&scene->objects, idx, eachObj);
+    }
+
     TraceLog(LOG_INFO, "RayAnim: Started Animation #%i", eachAnim->_id);
-    pushToRAObjects(&scene->objects, eachObj);
   }
 }
 
